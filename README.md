@@ -1,1 +1,1 @@
-# CSCI345Deadwood
+# Deadwood
