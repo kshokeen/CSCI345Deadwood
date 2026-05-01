@@ -3,7 +3,6 @@ package controller;
 import java.util.List;
 import java.util.Queue;
 
-import actions.Action;
 import model.Player;
 import model.Scene;
 
@@ -18,10 +17,6 @@ public class GameController {
     }
 
     private void resetToNewDay() {
-    }
-
-    public Action requestAction() {
-        return null;
     }
 
     public boolean verifyUpgrade(Integer rank) {
