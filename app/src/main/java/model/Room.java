@@ -2,11 +2,15 @@ package model;
 
 import java.util.List;
 
-public class Room {
-    private String name;
-    private List<Room> adjacentRooms;
+public abstract class Room {
+    protected String name;
+    protected List<Room> adjacentRooms;
 
     public List<Room> getAdjacentRooms() {
         return adjacentRooms;
+    }
+
+    public void setAdjacentRooms(List<Room> adjacentRooms) {
+        this.adjacentRooms = adjacentRooms;
     }
 }
