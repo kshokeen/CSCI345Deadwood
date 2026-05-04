@@ -29,13 +29,38 @@ public class FilmSet extends Room {
       this.scene = scene;
     }
 
-    public Scene getScene(){
+    public Scene getScene() {
       return this.scene;
     }
 
     public FilmSet(Integer shotsOnBoard, List<Role> roles) {
       this.shotsOnBoard = shotsOnBoard;
       this.shotsRemaining = shotsOnBoard;
+      this.roles = roles;
+    }
+
+    public FilmSet(String name, Integer shotsOnBoard, List<Role> roles) {
+      this(shotsOnBoard, roles);
+      this.name = name;
+    }
+
+    public Integer getShotsOnBoard() {
+      return shotsOnBoard;
+    }
+
+    public Integer getShotsRemaining() {
+      return shotsRemaining;
+    }
+
+    public void setShotsRemaining(Integer shotsRemaining) {
+      this.shotsRemaining = shotsRemaining;
+    }
+
+    public List<Role> getRoles() {
+      return roles;
+    }
+
+    public void setRoles(List<Role> roles) {
       this.roles = roles;
     }
 }
