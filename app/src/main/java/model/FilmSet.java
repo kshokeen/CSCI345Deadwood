@@ -1,5 +1,6 @@
 package model;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class FilmSet extends Room {
@@ -62,5 +63,29 @@ public class FilmSet extends Room {
 
     public void setRoles(List<Role> roles) {
       this.roles = roles;
+    }
+
+    public List<Role> getAvailableRoles() {
+      List<Role> openRoles = new ArrayList<Role>();
+
+      for (Role role : roles) {
+        if (role.isAvailable()) {
+          openRoles.add(role);
+        }
+      }
+
+      return openRoles;
+    }
+
+    public boolean hasScene() {
+      return scene != null;
+    }
+
+    public boolean isWrapped() {
+      return shotsRemaining <= 0;
+    }
+
+    public void resetShots() {
+      shotsRemaining = shotsOnBoard;
     }
 }
