@@ -16,4 +16,14 @@ public class Board {
     public void setRooms(List<Room> rooms) {
         this.rooms = rooms;
     }
+
+    public Room getRoomByName(String name) {
+        for (Room room : rooms) {
+            if (room.getName().equals(name)) {
+                return room;
+            }
+        }
+
+        return null;
+    }
 }
