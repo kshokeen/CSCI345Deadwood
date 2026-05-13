@@ -27,7 +27,9 @@ public class Player {
     }
 
     public void move(Room room) {
-        position = room;
+	if (this.position != null && this.position.getAdjacentRooms().contains(room)) {
+	  this.position = room;
+	}
     }
 
     public void act() {
@@ -104,5 +106,19 @@ public class Player {
 
     public Integer calculateScore() {
         return dollars + credits + (5 * rank);
+    }
+
+    public String toString() {
+	String s = "Credits: " + credits + ", Dollars: " + dollars;
+	s += " Score: " + calculateScore();
+	if (position != null) {
+	    s += " position: " + position;
+	}
+	if (activeRole != null) {
+	    s += " role: " + activeRole;
+	}
+
+	s += "\n";
+	return s;
     }
 }
