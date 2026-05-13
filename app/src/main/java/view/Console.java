@@ -1,9 +1,10 @@
 package view;
 
 public class Console {
-    public void displayInfo() {
+    public void displayInfo(String s) {
     }
 
-    public void promptUser() {
+    public String promptUser(String s) {
+      
     }
 }
