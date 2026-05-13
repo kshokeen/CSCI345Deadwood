@@ -5,6 +5,6 @@ public class Console {
     }
 
     public String promptUser(String s) {
-      
+      return "";
     }
 }
