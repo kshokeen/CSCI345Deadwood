@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import model.Player;
 import model.Scene;
 import view.Console;
-import 
+import model.Board;
 
 public class GameController {
     private Console console;
@@ -62,6 +62,10 @@ public class GameController {
 	  displayGameState();
     }
 
+    private void gameLoop() {
+
+    }
+
 	public void displayGameState() {
 		console.displayInfo("Days remaining: " + daysRemaining.toString() + "\n");
 		for (Player n : players) {
@@ -78,15 +82,30 @@ public class GameController {
 	  }
     }
 
+    private void movePlayer(Player p) {
+
+    }
+
+    private void upgrade(Player p) {
+
+    }
+
+    private void act(Player p) {
+
+    }
+
+    private void rehearse(Player p) {
+
+    }
+
+    private void takeRole(Player p) {
+
+    }
+
     private void resetToNewDay() {
     }
 
-    private void movePlayer(Player p) {
-
-
-    }
-
-    public boolean verifyUpgrade(Integer rank) {
+    public boolean verifyUpgrade(Player p, Integer rank) {
         return false;
     }
 

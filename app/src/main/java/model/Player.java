@@ -23,22 +23,10 @@ public class Player {
         this.activeRole = null;
     }
 
-    public void doTurn() {
-    }
-
     public void move(Room room) {
-	if (this.position != null && this.position.getAdjacentRooms().contains(room)) {
-	  this.position = room;
-	}
-    }
-
-    public void act() {
-    }
-
-    public void rehearse() {
-    }
-
-    public void upgrade() {
+        if (this.position != null && this.position.getAdjacentRooms().contains(room)) {
+           this.position = room;
+        }
     }
 
     public void takeRole(Role role) {
@@ -109,16 +97,16 @@ public class Player {
     }
 
     public String toString() {
-	String s = "Credits: " + credits + ", Dollars: " + dollars;
-	s += " Score: " + calculateScore();
-	if (position != null) {
-	    s += " position: " + position;
-	}
-	if (activeRole != null) {
-	    s += " role: " + activeRole;
-	}
+        String s = "Credits: " + credits + ", Dollars: " + dollars;
+        s += " Score: " + calculateScore();
+        if (position != null) {
+            s += " position: " + position;
+        }
+        if (activeRole != null) {
+            s += " role: " + activeRole;
+        }
 
-	s += "\n";
-	return s;
+        s += "\n";
+        return s;
     }
 }
