@@ -104,13 +104,13 @@ public class XMLParser {
 
         if ("set".equals(nodeName)) {
             String name = roomElement.getAttribute("name");
-            Integer shotsOnBoard = roomElement.getElementsByTagName("take").getLength();
+            List<Integer> takeNumbers = parseTakeNumbers(roomElement);
             List<Role> roles = parseRoles(roomElement);
-            return new FilmSet(name, shotsOnBoard, roles);
+            return new FilmSet(name, takeNumbers, roles);
         } else if ("trailer".equals(nodeName)) {
             return new Trailers("trailer");
         } else if ("office".equals(nodeName)) {
-            return new CastingOffice("office");
+            return parseCastingOffice(roomElement);
         }
 
         throw new IllegalArgumentException("Unknown room type: " + nodeName);
@@ -134,6 +134,45 @@ public class XMLParser {
         String line = lineElement.getTextContent().trim();
 
         return new Role(name, rank, line);
+    }
+
+    private List<Integer> parseTakeNumbers(Element setElement) {
+        List<Integer> takeNumbers = new ArrayList<Integer>();
+        Element takesElement = getFirstDirectChild(setElement, "takes");
+
+        if (takesElement == null) {
+            return takeNumbers;
+        }
+
+        NodeList takeNodes = takesElement.getElementsByTagName("take");
+
+        for (int i = 0; i < takeNodes.getLength(); i++) {
+            Element takeElement = (Element) takeNodes.item(i);
+            takeNumbers.add(parseIntegerAttribute(takeElement, "number"));
+        }
+
+        return takeNumbers;
+    }
+
+    private CastingOffice parseCastingOffice(Element officeElement) {
+        CastingOffice office = new CastingOffice("office");
+        Element upgradesElement = getFirstDirectChild(officeElement, "upgrades");
+
+        if (upgradesElement == null) {
+            return office;
+        }
+
+        NodeList upgradeNodes = upgradesElement.getElementsByTagName("upgrade");
+
+        for (int i = 0; i < upgradeNodes.getLength(); i++) {
+            Element upgradeElement = (Element) upgradeNodes.item(i);
+            Integer rank = parseIntegerAttribute(upgradeElement, "level");
+            String currency = upgradeElement.getAttribute("currency");
+            Integer amount = parseIntegerAttribute(upgradeElement, "amt");
+            office.addUpgradeCost(rank, currency, amount);
+        }
+
+        return office;
     }
 
     private List<Room> parseAdjacentRooms(Element roomElement, Map<String, Room> roomsByName) {

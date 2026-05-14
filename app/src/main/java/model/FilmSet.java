@@ -8,6 +8,7 @@ public class FilmSet extends Room {
     private Integer shotsRemaining;
     private Scene scene;
     private List<Role> roles;
+    private List<Integer> takeNumbers;
 
     /**
      * removes a shot counter after a successful act
@@ -38,11 +39,18 @@ public class FilmSet extends Room {
       this.shotsOnBoard = shotsOnBoard;
       this.shotsRemaining = shotsOnBoard;
       this.roles = roles;
+      this.takeNumbers = new ArrayList<Integer>();
     }
 
     public FilmSet(String name, Integer shotsOnBoard, List<Role> roles) {
       this(shotsOnBoard, roles);
       this.name = name;
+    }
+
+    public FilmSet(String name, List<Integer> takeNumbers, List<Role> roles) {
+      this(takeNumbers.size(), roles);
+      this.name = name;
+      this.takeNumbers = takeNumbers;
     }
 
     public Integer getShotsOnBoard() {
@@ -63,6 +71,14 @@ public class FilmSet extends Room {
 
     public void setRoles(List<Role> roles) {
       this.roles = roles;
+    }
+
+    public List<Integer> getTakeNumbers() {
+      return takeNumbers;
+    }
+
+    public void setTakeNumbers(List<Integer> takeNumbers) {
+      this.takeNumbers = takeNumbers;
     }
 
     public List<Role> getAvailableRoles() {
