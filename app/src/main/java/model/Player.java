@@ -25,7 +25,7 @@ public class Player {
 
     public void move(Room room) {
         if (this.position != null && this.position.getAdjacentRooms().contains(room)) {
-           this.position = room;
+            this.position = room;
         }
     }
 

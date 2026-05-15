@@ -15,10 +15,10 @@ public class FilmSet extends Room {
      * Precondition: there are at least 1 shots remaining
      */
     public void removeShotCounter() {
-      shotsRemaining--;
-      if (shotsRemaining <= 0) {
-        activateEndOfScene();
-      }
+        shotsRemaining--;
+        if (shotsRemaining <= 0) {
+            activateEndOfScene();
+        }
     }
 
     /**
@@ -28,80 +28,80 @@ public class FilmSet extends Room {
     }
 
     public void setScene(Scene scene) {
-      this.scene = scene;
+        this.scene = scene;
     }
 
     public Scene getScene() {
-      return this.scene;
+        return this.scene;
     }
 
     public FilmSet(Integer shotsOnBoard, List<Role> roles) {
-      this.shotsOnBoard = shotsOnBoard;
-      this.shotsRemaining = shotsOnBoard;
-      this.roles = roles;
-      this.takeNumbers = new ArrayList<Integer>();
+        this.shotsOnBoard = shotsOnBoard;
+        this.shotsRemaining = shotsOnBoard;
+        this.roles = roles;
+        this.takeNumbers = new ArrayList<Integer>();
     }
 
     public FilmSet(String name, Integer shotsOnBoard, List<Role> roles) {
-      this(shotsOnBoard, roles);
-      this.name = name;
+        this(shotsOnBoard, roles);
+        this.name = name;
     }
 
     public FilmSet(String name, List<Integer> takeNumbers, List<Role> roles) {
-      this(takeNumbers.size(), roles);
-      this.name = name;
-      this.takeNumbers = takeNumbers;
+        this(takeNumbers.size(), roles);
+        this.name = name;
+        this.takeNumbers = takeNumbers;
     }
 
     public Integer getShotsOnBoard() {
-      return shotsOnBoard;
+        return shotsOnBoard;
     }
 
     public Integer getShotsRemaining() {
-      return shotsRemaining;
+        return shotsRemaining;
     }
 
     public void setShotsRemaining(Integer shotsRemaining) {
-      this.shotsRemaining = shotsRemaining;
+        this.shotsRemaining = shotsRemaining;
     }
 
     public List<Role> getRoles() {
-      return roles;
+        return roles;
     }
 
     public void setRoles(List<Role> roles) {
-      this.roles = roles;
+        this.roles = roles;
     }
 
     public List<Integer> getTakeNumbers() {
-      return takeNumbers;
+        return takeNumbers;
     }
 
     public void setTakeNumbers(List<Integer> takeNumbers) {
-      this.takeNumbers = takeNumbers;
+        this.takeNumbers = takeNumbers;
     }
 
     public List<Role> getAvailableRoles() {
-      List<Role> openRoles = new ArrayList<Role>();
+        List<Role> openRoles = new ArrayList<Role>();
 
-      for (Role role : roles) {
-        if (role.isAvailable()) {
-          openRoles.add(role);
+        for (Role role : roles) {
+            if (role.isAvailable()) {
+                openRoles.add(role);
+            }
         }
-      }
 
-      return openRoles;
+        return openRoles;
     }
 
     public boolean hasScene() {
-      return scene != null;
+        return scene != null;
     }
 
     public boolean isWrapped() {
-      return shotsRemaining <= 0;
+        return shotsRemaining <= 0;
     }
 
     public void resetShots() {
-      shotsRemaining = shotsOnBoard;
+        shotsRemaining = shotsOnBoard;
     }
 }
