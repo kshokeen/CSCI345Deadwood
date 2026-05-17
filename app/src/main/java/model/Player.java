@@ -84,6 +84,24 @@ public class Player {
         credits += amount;
     }
 
+    public boolean canPay(String currency, Integer amount) {
+        if ("dollar".equals(currency) || "dollars".equals(currency)) {
+            return dollars >= amount;
+        } else if ("credit".equals(currency) || "credits".equals(currency)) {
+            return credits >= amount;
+        }
+
+        return false;
+    }
+
+    public void pay(String currency, Integer amount) {
+        if ("dollar".equals(currency) || "dollars".equals(currency)) {
+            dollars -= amount;
+        } else if ("credit".equals(currency) || "credits".equals(currency)) {
+            credits -= amount;
+        }
+    }
+
     public boolean canTakeRole(Role role) {
         return role != null && activeRole == null && role.isAvailable() && rank >= role.getRank();
     }

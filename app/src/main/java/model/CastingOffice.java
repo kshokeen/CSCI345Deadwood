@@ -1,7 +1,10 @@
 package model;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 public class CastingOffice extends Room {
     private Map<Integer, Integer> dollarCosts;
@@ -45,5 +48,12 @@ public class CastingOffice extends Room {
 
     public Map<Integer, Integer> getCreditCosts() {
         return creditCosts;
+    }
+
+    public Set<Integer> getUpgradeRanks() {
+        Set<Integer> ranks = new HashSet<Integer>();
+        ranks.addAll(dollarCosts.keySet());
+        ranks.addAll(creditCosts.keySet());
+        return new TreeSet<Integer>(ranks);
     }
 }

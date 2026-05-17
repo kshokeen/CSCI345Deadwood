@@ -6,6 +6,7 @@ import java.util.Queue;
 import java.util.Random;
 
 import model.Board;
+import model.CastingOffice;
 import model.FilmSet;
 import model.Player;
 import model.Role;
@@ -94,11 +95,81 @@ public class GameController {
     }
 
     private void movePlayer(Player p) {
+        if (p == null) {
+            return;
+        }
 
+        if (p.isWorking()) {
+            console.displayInfo("You cannot move while working on a role.");
+            return;
+        }
+
+        Room current = p.getPosition();
+        if (current == null || current.getAdjacentRooms() == null || current.getAdjacentRooms().isEmpty()) {
+            console.displayInfo("There are no available rooms to move to.");
+            return;
+        }
+
+        List<Room> rooms = current.getAdjacentRooms();
+        console.displayInfo("Current room: " + current.getName());
+        console.displayInfo("Rooms you can move to:");
+
+        for (int i = 0; i < rooms.size(); i++) {
+            console.displayInfo((i + 1) + ". " + rooms.get(i).getName());
+        }
+
+        String input = console.promptUser("Choose a room number or name: ");
+        Room nextRoom = findRoomChoice(input, rooms);
+
+        if (nextRoom == null) {
+            console.displayInfo("Invalid room choice.");
+            return;
+        }
+
+        p.move(nextRoom);
+        console.displayInfo("Moved to " + p.getPosition().getName() + ".");
     }
 
     private void upgrade(Player p) {
+        if (p == null) {
+            return;
+        }
 
+        if (p.isWorking()) {
+            console.displayInfo("You cannot upgrade while working on a role.");
+            return;
+        }
+
+        if (!(p.getPosition() instanceof CastingOffice)) {
+            console.displayInfo("You must be in the casting office to upgrade.");
+            return;
+        }
+
+        CastingOffice office = (CastingOffice) p.getPosition();
+        showUpgradeCosts(office);
+
+        Integer rank = parseInteger(console.promptUser("Choose a rank to upgrade to: "));
+        if (!verifyUpgrade(p, rank)) {
+            console.displayInfo("Invalid upgrade rank.");
+            return;
+        }
+
+        String currency = normalizeCurrency(console.promptUser("Pay with dollars or credits? "));
+        Integer cost = office.getUpgradeCost(rank, currency);
+
+        if (cost == null) {
+            console.displayInfo("That upgrade cannot be paid with " + currency + ".");
+            return;
+        }
+
+        if (!p.canPay(currency, cost)) {
+            console.displayInfo("You do not have enough " + currency + " for that upgrade.");
+            return;
+        }
+
+        p.pay(currency, cost);
+        p.setRank(rank);
+        console.displayInfo("Upgraded to rank " + rank + ".");
     }
 
     private void act(Player p) {
@@ -152,9 +223,61 @@ public class GameController {
     }
 
     public boolean verifyUpgrade(Player p, Integer rank) {
-        return false;
+        if (p == null || rank == null || !(p.getPosition() instanceof CastingOffice)) {
+            return false;
+        }
+
+        CastingOffice office = (CastingOffice) p.getPosition();
+        return rank > p.getRank()
+                && (office.getDollarCost(rank) != null || office.getCreditCost(rank) != null);
     }
 
     private void concludeGame() {
+    }
+
+    private Room findRoomChoice(String input, List<Room> rooms) {
+        Integer roomNumber = parseInteger(input);
+
+        if (roomNumber != null && roomNumber >= 1 && roomNumber <= rooms.size()) {
+            return rooms.get(roomNumber - 1);
+        }
+
+        for (Room room : rooms) {
+            if (room.getName().equalsIgnoreCase(input.trim())) {
+                return room;
+            }
+        }
+
+        return null;
+    }
+
+    private Integer parseInteger(String input) {
+        try {
+            return Integer.valueOf(input.trim());
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    private String normalizeCurrency(String input) {
+        String currency = input.trim().toLowerCase();
+
+        if ("dollars".equals(currency)) {
+            return "dollar";
+        } else if ("credits".equals(currency)) {
+            return "credit";
+        }
+
+        return currency;
+    }
+
+    private void showUpgradeCosts(CastingOffice office) {
+        console.displayInfo("Available upgrades:");
+
+        for (Integer rank : office.getUpgradeRanks()) {
+            Integer dollarCost = office.getDollarCost(rank);
+            Integer creditCost = office.getCreditCost(rank);
+            console.displayInfo("Rank " + rank + ": $" + dollarCost + " or " + creditCost + " credits");
+        }
     }
 }
