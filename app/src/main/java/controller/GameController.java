@@ -18,8 +18,8 @@ public class GameController {
     private Console console;
     private Board board;
     private Queue<Scene> scenesDeck;
-    private Integer daysRemaining;
-    private Integer scenesRemaining;
+    private int daysRemaining;
+    private int scenesRemaining;
     private List<Player> players;
     private Player activePlayer;
 
@@ -71,7 +71,7 @@ public class GameController {
         }
 
         resetToNewDay();
-        displayGameState();
+
     }
 
     private void gameLoop() {
@@ -79,7 +79,7 @@ public class GameController {
     }
 
     public void displayGameState() {
-        console.displayInfo("Days remaining: " + daysRemaining.toString() + "\n");
+        console.displayInfo("Days remaining: " + daysRemaining + "\n");
         for (Player n : players) {
             console.displayInfo("Player " + (players.indexOf(n) + 1) + ": " + n.toString());
         }
@@ -172,16 +172,129 @@ public class GameController {
         console.displayInfo("Upgraded to rank " + rank + ".");
     }
 
-    private void act(Player p) {
-
+    /** Act - Player act and is given rewards based on success or failure. Also handles the wrapping of scenes.
+     *
+     * @param p player which is to act.
+     * @return 0 when function runs without errors. -1 otherwise.
+     */
+     int act(Player p) {
+        int func_status = 0;
+        if (p.getActiveRole() != null) {
+            Random random = new Random();
+            int roll = 1 + random.nextInt(6); // random generates a number between 0 and 5 inclusive.
+            if (p.getActiveRole().getParentScene() != null) {
+                // On Card Role
+                if (roll + p.getActiveRole().getRehearsalChips() >= p.getActiveRole().getParentScene().getBudget()) {
+                    p.setCredits(p.getCredits() + 2);
+                    int status = p.getActiveRole().getParentScene().getContainingSet().removeShotCounter();
+                    if (status == 0) {
+                        scenesRemaining--;
+                        if(scenesRemaining <= 0) {
+                            resetToNewDay();
+                        }
+                    } else if (status == -1) {
+                        func_status = -1;
+                    }
+                } // On Card Roles do not get anything on failure.
+            } else if(p.getActiveRole().getParentSet() != null) {
+                // Off Card Role
+                if (roll + p.getActiveRole().getRehearsalChips() >= p.getActiveRole().getParentSet().getScene().getBudget()) {
+                    p.setCredits(p.getCredits() + 1);
+                    p.setDollars(p.getDollars() + 1);
+                    int status = p.getActiveRole().getParentSet().removeShotCounter();
+                    if (status == 0) {
+                        scenesRemaining--;
+                        if (scenesRemaining <= 0) {
+                            resetToNewDay();
+                        }
+                    } else if (status == -1) {
+                        func_status = -1;
+                    }
+                } else {
+                    p.setDollars(p.getDollars() + 1);
+                }
+            } else {
+                func_status = -1;
+            }
+        } else {
+            func_status = -1;
+        }
+        return  func_status;
     }
 
-    private void rehearse(Player p) {
-
+    /** rehearse
+     *  gives player a rehearsal chip if they are acting on a role and do not yet have a guarantee
+     *  of success on their next act role.
+     *
+     * return value: 0 for success, -1 for unable to rehearse.
+     *
+     */
+    int rehearse(Player p) {
+        int status = 0;
+        Role r = p.getActiveRole();
+        if (r != null) {
+            FilmSet set = r.getParentSet();
+            Scene scene = r.getParentScene();
+            if (set != null && (set.getScene() != null)) {
+                if (r.getRehearsalChips() + 1 < set.getScene().getBudget()) {
+                    r.incrementRehearsalChips();
+                }
+                else {
+                    status = -1;
+                }
+            } else if (scene != null) {
+                if (r.getRehearsalChips() + 1 < scene.getBudget()) {
+                    r.incrementRehearsalChips();
+                } else {
+                    status = -1;
+                }
+            } else {
+                status = -1;
+            }
+        } else {
+            status = -1;
+        }
+        return status;
     }
 
-    private void takeRole(Player p) {
+    /** takeRole
+     * allows the player to take a role if there's a scene available in their current location.
+     *
+     * @param p player to select role
+     */
+    int takeRole(Player p) {
+        int func_status = 0;
+        Room r = p.getPosition();
+        if (r instanceof FilmSet && ((FilmSet) r).getScene() != null) {
+            FilmSet set = (FilmSet) r;
+            List<Role> off_card_roles = set.getAvailableRoles();
+            List<Role> on_card_roles = set.getScene().getAvailableRoles();
+            ArrayList<Role> all_roles = new ArrayList<>();
+            all_roles.addAll(off_card_roles);
+            all_roles.addAll(on_card_roles);
+            if (!all_roles.isEmpty()) {
+                int i = 0;
+                String prompt = "Please select one of the following roles by index:\n";
+                for (Role role : all_roles) {
+                    prompt += i + " " + role.toString() + "\n";
+                    i++;
+                }
 
+                String response = console.promptUser(prompt);
+                int si = Integer.parseInt(response);
+                if (p.getRank() >= all_roles.get(si).getRank()) {
+                    p.setActiveRole(all_roles.get(si));
+                } else {
+                    console.displayInfo("Player rank too low for selected Role.");
+                    func_status = -1;
+                }
+            } else {
+                console.displayInfo("No available roles.");
+            }
+        } else {
+            func_status = -1;
+        }
+        return func_status;
     }
 
     private void resetToNewDay() {
@@ -209,6 +322,7 @@ public class GameController {
 
                 if (!scenesDeck.isEmpty()) {
                     set.setScene(scenesDeck.poll());
+                    set.getScene().setContainingSet(set);
                     scenesRemaining++;
                 }
             }
@@ -279,5 +393,9 @@ public class GameController {
             Integer creditCost = office.getCreditCost(rank);
             console.displayInfo("Rank " + rank + ": $" + dollarCost + " or " + creditCost + " credits");
         }
+    }
+
+    public Player getActivePlayer() {
+        return this.activePlayer;
     }
 }

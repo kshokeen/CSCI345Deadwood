@@ -74,6 +74,13 @@ public class Player {
 
     public void setActiveRole(Role activeRole) {
         this.activeRole = activeRole;
+        if (activeRole != null) {
+            activeRole.setActor(this);
+        }
+    }
+
+    public void removeRole() {
+        this.activeRole = null;
     }
 
     public void addDollars(Integer amount) {
@@ -115,7 +122,7 @@ public class Player {
     }
 
     public String toString() {
-        String s = "Credits: " + credits + ", Dollars: " + dollars;
+        String s = "Rank: " + getRank() + " Credits: " + credits + ", Dollars: " + dollars;
         s += " Score: " + calculateScore();
         if (position != null) {
             s += " position: " + position;
@@ -124,7 +131,6 @@ public class Player {
             s += " role: " + activeRole;
         }
 
-        s += "\n";
         return s;
     }
 }

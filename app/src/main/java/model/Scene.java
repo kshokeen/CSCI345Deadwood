@@ -10,6 +10,11 @@ public class Scene {
     private String description;
     private String imageName;
     private List<Role> roles;
+    private FilmSet containingSet;
+
+    public Scene(String title, Integer budget, Integer sceneNumber, String description, String imageName) {
+        this(title, budget, sceneNumber, description, imageName, null);
+    }
 
     public Scene(String title, Integer budget, Integer sceneNumber, String description, String imageName,
             List<Role> roles) {
@@ -94,5 +99,13 @@ public class Scene {
             role.setActor(null);
             role.setRehearsalChips(0);
         }
+    }
+
+    public FilmSet getContainingSet() {
+        return containingSet;
+    }
+
+    public void setContainingSet(FilmSet containingSet) {
+        this.containingSet = containingSet;
     }
 }
