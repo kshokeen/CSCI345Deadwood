@@ -94,4 +94,15 @@ public class Role {
     public Scene getParentScene() {
         return parentScene;
     }
+
+    public String toString() {
+        String s = "Rank: " + rank + " Title: " + name;
+        if (parentSet != null) {
+            s += " Off Card Role";
+        }
+        if (parentScene != null) {
+            s += " On Card Role";
+        }
+        return s;
+    }
 }

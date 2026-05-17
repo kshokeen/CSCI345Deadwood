@@ -138,8 +138,44 @@ public class GameController {
         return status;
     }
 
-    private void takeRole(Player p) {
+    /** takeRole
+     * allows the player to take a role if there's a scene available in their current location.
+     *
+     * @param p player to select role
+     */
+    int takeRole(Player p) {
+        int func_status = 0;
+        Room r = p.getPosition();
+        if (r instanceof FilmSet && ((FilmSet) r).getScene() != null) {
+            FilmSet set = (FilmSet) r;
+            List<Role> off_card_roles = set.getAvailableRoles();
+            List<Role> on_card_roles = set.getScene().getAvailableRoles();
+            ArrayList<Role> all_roles = new ArrayList<>();
+            all_roles.addAll(off_card_roles);
+            all_roles.addAll(on_card_roles);
+            if (!all_roles.isEmpty()) {
+                int i = 0;
+                String prompt = "Please select one of the following roles by index:\n";
+                for (Role role : all_roles) {
+                    prompt += i + " " + role.toString() + "\n";
+                    i++;
+                }
 
+                String response = console.promptUser(prompt);
+                int si = Integer.parseInt(response);
+                if (p.getRank() >= all_roles.get(si).getRank()) {
+                    p.setActiveRole(all_roles.get(si));
+                } else {
+                    console.displayInfo("Player rank too low for selected Role.");
+                    func_status = -1;
+                }
+            } else {
+                console.displayInfo("No available roles.");
+            }
+        } else {
+            func_status = -1;
+        }
+        return func_status;
     }
 
     private void resetToNewDay() {
