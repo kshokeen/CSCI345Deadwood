@@ -11,6 +11,10 @@ public class Scene {
     private String imageName;
     private List<Role> roles;
 
+    public Scene(String title, Integer budget, Integer sceneNumber, String description, String imageName) {
+        this(title, budget, sceneNumber, description, imageName, null);
+    }
+
     public Scene(String title, Integer budget, Integer sceneNumber, String description, String imageName,
             List<Role> roles) {
         this.title = title;

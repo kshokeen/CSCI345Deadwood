@@ -21,4 +21,8 @@ public abstract class Room {
     public void setAdjacentRooms(List<Room> adjacentRooms) {
         this.adjacentRooms = adjacentRooms;
     }
+
+    public String toString() {
+        return name;
+    }
 }

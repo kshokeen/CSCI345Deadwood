@@ -94,9 +94,11 @@ public class XMLParser {
         Element sceneElement = getFirstDirectChild(cardElement, "scene");
         Integer sceneNumber = parseIntegerAttribute(sceneElement, "number");
         String description = sceneElement.getTextContent().trim().replaceAll("\\s+", " ");
-        List<Role> roles = parseRoles(cardElement);
+        Scene scene = new Scene(title, budget, sceneNumber, description, imageName);
+        List<Role> roles = parseRoles(cardElement, scene);
+        scene.setRoles(roles);
 
-        return new Scene(title, budget, sceneNumber, description, imageName, roles);
+        return scene;
     }
 
     private Room createRoom(Element roomElement) {
@@ -105,8 +107,10 @@ public class XMLParser {
         if ("set".equals(nodeName)) {
             String name = roomElement.getAttribute("name");
             List<Integer> takeNumbers = parseTakeNumbers(roomElement);
-            List<Role> roles = parseRoles(roomElement);
-            return new FilmSet(name, takeNumbers, roles);
+            FilmSet set = new FilmSet(name, takeNumbers.size());
+            List<Role> roles = parseRoles(roomElement, set);
+            set.setRoles(roles);
+            return set;
         } else if ("trailer".equals(nodeName)) {
             return new Trailers("trailer");
         } else if ("office".equals(nodeName)) {
@@ -116,24 +120,44 @@ public class XMLParser {
         throw new IllegalArgumentException("Unknown room type: " + nodeName);
     }
 
-    private List<Role> parseRoles(Element parentElement) {
+    private List<Role> parseRoles(Element parentElement, FilmSet set) {
         NodeList partNodes = parentElement.getElementsByTagName("part");
         List<Role> roles = new ArrayList<Role>();
 
         for (int i = 0; i < partNodes.getLength(); i++) {
-            roles.add(parseRole((Element) partNodes.item(i)));
+            roles.add(parseRole((Element) partNodes.item(i), set));
         }
 
         return roles;
     }
 
-    private Role parseRole(Element partElement) {
+    private List<Role> parseRoles(Element parentElement, Scene scene) {
+        NodeList partNodes = parentElement.getElementsByTagName("part");
+        List<Role> roles = new ArrayList<Role>();
+
+        for (int i = 0; i < partNodes.getLength(); i++) {
+            roles.add(parseRole((Element) partNodes.item(i), scene));
+        }
+
+        return roles;
+    }
+
+    private Role parseRole(Element partElement, FilmSet set) {
         String name = partElement.getAttribute("name");
         Integer rank = parseIntegerAttribute(partElement, "level");
         Element lineElement = getFirstDirectChild(partElement, "line");
         String line = lineElement.getTextContent().trim();
 
-        return new Role(name, rank, line);
+        return new Role(name, rank, line, set);
+    }
+
+    private Role parseRole(Element partElement, Scene scene) {
+        String name = partElement.getAttribute("name");
+        Integer rank = parseIntegerAttribute(partElement, "level");
+        Element lineElement = getFirstDirectChild(partElement, "line");
+        String line = lineElement.getTextContent().trim();
+
+        return new Role(name, rank, line, scene);
     }
 
     private List<Integer> parseTakeNumbers(Element setElement) {

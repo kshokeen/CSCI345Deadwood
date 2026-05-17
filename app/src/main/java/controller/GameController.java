@@ -69,8 +69,6 @@ public class GameController {
             }
         }
 
-        resetToNewDay();
-        displayGameState();
     }
 
     private void gameLoop() {
@@ -105,8 +103,39 @@ public class GameController {
 
     }
 
-    private void rehearse(Player p) {
-
+    /** rehearse 
+     *  gives player a rehearsal chip if they are acting on a role and do not yet have a guarantee
+     *  of success on their next act role. 
+     *
+     * return value: 0 for success, -1 for unable to rehearse.
+     *
+     */
+    int rehearse(Player p) {
+        int status = 0; 
+        Role r = p.getActiveRole();
+        if (r != null) {
+            FilmSet set = r.getParentSet();
+            Scene scene = r.getParentScene();
+            if (set != null && (set.getScene() != null)) {
+                if (r.getRehearsalChips() + 1 < set.getScene().getBudget()) {
+                    r.incrementRehearsalChips();
+                }
+                else {
+                    status = -1;
+                }
+            } else if (scene != null) {
+                if (r.getRehearsalChips() + 1 < scene.getBudget()) {
+                    r.incrementRehearsalChips();
+                } else {
+                    status = -1;
+                }
+            } else {
+                status = -1;
+            }
+        } else {
+            status = -1;
+        }
+        return status;
     }
 
     private void takeRole(Player p) {
@@ -156,5 +185,9 @@ public class GameController {
     }
 
     private void concludeGame() {
+    }
+
+    public Player getActivePlayer() {
+        return this.activePlayer;
     }
 }

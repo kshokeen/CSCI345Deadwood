@@ -4,19 +4,35 @@ public class Role {
     private String name;
     private Integer rank;
     private String line;
-    private Integer rehearsalChips;
+    private int rehearsalChips;
     private Player actor;
+    private FilmSet parentSet;
+    private Scene parentScene;
 
     public Role(String name, Integer rank) {
         this(name, rank, null);
     }
 
     public Role(String name, Integer rank, String line) {
+        this(name, rank, line, null, null);
+    }
+
+    public Role(String name, Integer rank, String line, FilmSet parentSet) {
+        this(name, rank, line, parentSet, null);
+    }
+
+    public Role(String name, Integer rank, String line, Scene parentScene) {
+        this(name, rank, line, null, parentScene);
+    }
+
+    public Role(String name, Integer rank, String line, FilmSet parentSet, Scene parentScene) {
         this.name = name;
         this.rank = rank;
         this.line = line;
         this.rehearsalChips = 0;
         this.actor = null;
+        this.parentScene = parentScene;
+        this.parentSet = parentSet;
     }
 
     public String getName() {
@@ -51,6 +67,10 @@ public class Role {
         this.rehearsalChips = rehearsalChips;
     }
 
+    public void incrementRehearsalChips() {
+        this.rehearsalChips = rehearsalChips + 1;
+    }
+
     public Player getActor() {
         return actor;
     }
@@ -65,5 +85,13 @@ public class Role {
 
     public boolean isAvailable() {
         return actor == null;
+    }
+
+    public FilmSet getParentSet() {
+        return parentSet;
+    }
+
+    public Scene getParentScene() {
+        return parentScene;
     }
 }
