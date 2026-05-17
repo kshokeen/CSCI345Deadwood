@@ -95,6 +95,11 @@ public class Role {
         return parentScene;
     }
 
+    public void reset() {
+        this.actor = null;
+        this.rehearsalChips = 0;
+    }
+
     public String toString() {
         String s = "Rank: " + rank + " Title: " + name;
         if (parentSet != null) {

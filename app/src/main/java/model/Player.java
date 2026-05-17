@@ -77,6 +77,10 @@ public class Player {
         activeRole.setActor(this);
     }
 
+    public void removeRole() {
+        this.activeRole = null;
+    }
+
     public void addDollars(Integer amount) {
         dollars += amount;
     }

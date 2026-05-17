@@ -1,7 +1,9 @@
 package model;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 
 public class FilmSet extends Room {
     private final Integer shotsOnBoard;
@@ -24,18 +26,87 @@ public class FilmSet extends Room {
     /**
      * removes a shot counter after a successful act
      * Precondition: there are at least 1 shots remaining
+     * Returns: -1 error, 0 scene wrapped successfully, >0 shots remaining.
      */
-    public void removeShotCounter() {
+    public int removeShotCounter() {
         shotsRemaining--;
+        int status = shotsRemaining;
         if (shotsRemaining <= 0) {
-            activateEndOfScene();
+            status = activateEndOfScene();
         }
+        return status;
     }
 
     /**
      * activates the end of scene action
      */
-    private void activateEndOfScene() {
+    private int activateEndOfScene() {
+        int func_status = 0;
+        if (getScene().getAvailableRoles().size() < getScene().getRoles().size()) { // There is at least one on card actor
+
+            List<Integer> dice = new ArrayList<Integer>();
+            Random random = new Random();
+
+            for (int i = 0; i < getScene().getBudget(); i++) {
+                dice.add(random.nextInt(1, 7));
+            }
+
+            Collections.sort(dice);
+
+            int numOnCardActors = getScene().getRoles().size() - getScene().getAvailableRoles().size();
+            int[] rewards = new int[numOnCardActors];
+            int ri = 0;
+
+            for (int i = getScene().getBudget() - 1; i >= 0; i--) {
+                rewards[ri] += dice.get(i);
+                if (ri < rewards.length - 1) {
+                    ri++;
+                } else {
+                    ri = 0;
+                }
+            }
+
+            List<Role> roles = getScene().getRoles();
+            List<Role> occupiedRoles = new ArrayList<>();
+            for (Role role : roles) {
+                if (role.isOccupied()) {
+                    occupiedRoles.add(role);
+                }
+            }
+            occupiedRoles.sort((r1, r2) -> r2.getRank() - r1.getRank());
+
+            ri = 0;
+            for (Role role : occupiedRoles) {
+
+                role.getActor().setDollars(role.getActor().getDollars() + rewards[ri]);
+                ri++;
+            }
+
+            for (Role role : this.getRoles()) { //Off card bonuses
+                if (role.isOccupied()) {
+                    role.getActor().setDollars(
+                            role.getActor().getDollars() + role.getParentSet().getScene().getBudget());
+                }
+            }
+        }
+
+        for (Role role : this.getRoles()) {
+            if(role.isOccupied()) {
+                role.getActor().removeRole();
+                role.reset();
+            }
+        }
+
+        for (Role role : this.getScene().getRoles()) {
+            if(role.isOccupied()) {
+                role.getActor().removeRole();
+                //Scene and roles attached will be garbage collected so no need to reset them.
+            }
+        }
+
+        this.scene = null;
+
+        return func_status;
     }
 
     public void setScene(Scene scene) {
