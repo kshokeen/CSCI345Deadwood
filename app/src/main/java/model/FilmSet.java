@@ -53,8 +53,8 @@ public class FilmSet extends Room {
 
             Collections.sort(dice);
 
-            int numOnCardActors = getScene().getRoles().size() - getScene().getAvailableRoles().size();
-            int[] rewards = new int[numOnCardActors];
+            int numOnCardRoles = getScene().getRoles().size();
+            int[] rewards = new int[numOnCardRoles];
             int ri = 0;
 
             for (int i = getScene().getBudget() - 1; i >= 0; i--) {
@@ -66,39 +66,31 @@ public class FilmSet extends Room {
                 }
             }
 
-            List<Role> roles = getScene().getRoles();
-            List<Role> occupiedRoles = new ArrayList<>();
-            for (Role role : roles) {
+            List<Role> cardRoles = getScene().getRoles();
+            for (int i = 0; i < cardRoles.size(); i++) {
+                Role role = cardRoles.get(i);
                 if (role.isOccupied()) {
-                    occupiedRoles.add(role);
+                    role.getActor().setDollars(role.getActor().getDollars() + rewards[i]);
                 }
-            }
-            occupiedRoles.sort((r1, r2) -> r2.getRank() - r1.getRank());
-
-            ri = 0;
-            for (Role role : occupiedRoles) {
-
-                role.getActor().setDollars(role.getActor().getDollars() + rewards[ri]);
-                ri++;
             }
 
             for (Role role : this.getRoles()) { //Off card bonuses
                 if (role.isOccupied()) {
                     role.getActor().setDollars(
-                            role.getActor().getDollars() + role.getParentSet().getScene().getBudget());
+                            role.getActor().getDollars() + role.getRank());
                 }
             }
         }
 
         for (Role role : this.getRoles()) {
-            if(role.isOccupied()) {
+            if (role.isOccupied()) {
                 role.getActor().removeRole();
                 role.reset();
             }
         }
 
         for (Role role : this.getScene().getRoles()) {
-            if(role.isOccupied()) {
+            if (role.isOccupied()) {
                 role.getActor().removeRole();
                 //Scene and roles attached will be garbage collected so no need to reset them.
             }

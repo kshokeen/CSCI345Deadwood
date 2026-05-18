@@ -11,6 +11,10 @@ public class Console {
 
     public String promptUser(String s) {
         System.out.print(s);
+        if (!scanner.hasNextLine()) {
+            return "quit";
+        }
+
         return scanner.nextLine();
     }
 }

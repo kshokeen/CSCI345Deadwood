@@ -45,8 +45,7 @@ public class GameController {
             players.add(new Player(trailers));
         }
 
-        Random r = new Random();
-        activePlayer = players.get(r.nextInt(nPlayers));
+        activePlayer = players.get(0);
 
         if (nPlayers < 4) {
             daysRemaining = 3;
@@ -71,11 +70,25 @@ public class GameController {
         }
 
         resetToNewDay();
-
+        gameLoop();
     }
 
     private void gameLoop() {
+        while (daysRemaining > 0) {
+            displayTurnInfo();
 
+            if (activePlayer.isWorking()) {
+                handleWorkingTurn();
+            } else {
+                handleOpenTurn();
+            }
+
+            if (daysRemaining > 0) {
+                advanceActivePlayer();
+            }
+        }
+
+        concludeGame();
     }
 
     public void displayGameState() {
@@ -86,28 +99,32 @@ public class GameController {
     }
 
     private void advanceActivePlayer() {
+        int previousPlayer = players.indexOf(activePlayer) + 1;
         int i = players.indexOf(activePlayer);
         if (i >= 0 && i < players.size() - 1) {
             activePlayer = players.get(i + 1);
         } else {
             activePlayer = players.get(0);
         }
+
+        console.displayInfo("Player " + previousPlayer + "'s turn ended.");
+        console.displayInfo("It is now Player " + (players.indexOf(activePlayer) + 1) + "'s turn.");
     }
 
-    private void movePlayer(Player p) {
+    private boolean movePlayer(Player p) {
         if (p == null) {
-            return;
+            return false;
         }
 
         if (p.isWorking()) {
             console.displayInfo("You cannot move while working on a role.");
-            return;
+            return false;
         }
 
         Room current = p.getPosition();
         if (current == null || current.getAdjacentRooms() == null || current.getAdjacentRooms().isEmpty()) {
             console.displayInfo("There are no available rooms to move to.");
-            return;
+            return false;
         }
 
         List<Room> rooms = current.getAdjacentRooms();
@@ -123,26 +140,27 @@ public class GameController {
 
         if (nextRoom == null) {
             console.displayInfo("Invalid room choice.");
-            return;
+            return false;
         }
 
         p.move(nextRoom);
         console.displayInfo("Moved to " + p.getPosition().getName() + ".");
+        return true;
     }
 
-    private void upgrade(Player p) {
+    private boolean upgrade(Player p) {
         if (p == null) {
-            return;
+            return false;
         }
 
         if (p.isWorking()) {
             console.displayInfo("You cannot upgrade while working on a role.");
-            return;
+            return false;
         }
 
         if (!(p.getPosition() instanceof CastingOffice)) {
             console.displayInfo("You must be in the casting office to upgrade.");
-            return;
+            return false;
         }
 
         CastingOffice office = (CastingOffice) p.getPosition();
@@ -151,7 +169,7 @@ public class GameController {
         Integer rank = parseInteger(console.promptUser("Choose a rank to upgrade to: "));
         if (!verifyUpgrade(p, rank)) {
             console.displayInfo("Invalid upgrade rank.");
-            return;
+            return false;
         }
 
         String currency = normalizeCurrency(console.promptUser("Pay with dollars or credits? "));
@@ -159,17 +177,18 @@ public class GameController {
 
         if (cost == null) {
             console.displayInfo("That upgrade cannot be paid with " + currency + ".");
-            return;
+            return false;
         }
 
         if (!p.canPay(currency, cost)) {
             console.displayInfo("You do not have enough " + currency + " for that upgrade.");
-            return;
+            return false;
         }
 
         p.pay(currency, cost);
         p.setRank(rank);
         console.displayInfo("Upgraded to rank " + rank + ".");
+        return true;
     }
 
     /** Act - Player act and is given rewards based on success or failure. Also handles the wrapping of scenes.
@@ -185,32 +204,37 @@ public class GameController {
             if (p.getActiveRole().getParentScene() != null) {
                 // On Card Role
                 if (roll + p.getActiveRole().getRehearsalChips() >= p.getActiveRole().getParentScene().getBudget()) {
+                    console.displayInfo("Rolled " + roll + ". Success!");
                     p.setCredits(p.getCredits() + 2);
                     int status = p.getActiveRole().getParentScene().getContainingSet().removeShotCounter();
                     if (status == 0) {
                         scenesRemaining--;
-                        if(scenesRemaining <= 0) {
-                            resetToNewDay();
-                        }
-                    } else if (status == -1) {
-                        func_status = -1;
-                    }
-                } // On Card Roles do not get anything on failure.
-            } else if(p.getActiveRole().getParentSet() != null) {
-                // Off Card Role
-                if (roll + p.getActiveRole().getRehearsalChips() >= p.getActiveRole().getParentSet().getScene().getBudget()) {
-                    p.setCredits(p.getCredits() + 1);
-                    p.setDollars(p.getDollars() + 1);
-                    int status = p.getActiveRole().getParentSet().removeShotCounter();
-                    if (status == 0) {
-                        scenesRemaining--;
-                        if (scenesRemaining <= 0) {
-                            resetToNewDay();
+                        if (scenesRemaining <= 1) {
+                            endDay();
                         }
                     } else if (status == -1) {
                         func_status = -1;
                     }
                 } else {
+                    console.displayInfo("Rolled " + roll + ". Failed.");
+                }
+            } else if(p.getActiveRole().getParentSet() != null) {
+                // Off Card Role
+                if (roll + p.getActiveRole().getRehearsalChips() >= p.getActiveRole().getParentSet().getScene().getBudget()) {
+                    console.displayInfo("Rolled " + roll + ". Success!");
+                    p.setCredits(p.getCredits() + 1);
+                    p.setDollars(p.getDollars() + 1);
+                    int status = p.getActiveRole().getParentSet().removeShotCounter();
+                    if (status == 0) {
+                        scenesRemaining--;
+                        if (scenesRemaining <= 1) {
+                            endDay();
+                        }
+                    } else if (status == -1) {
+                        func_status = -1;
+                    }
+                } else {
+                    console.displayInfo("Rolled " + roll + ". Failed, but off-card roles still earn $1.");
                     p.setDollars(p.getDollars() + 1);
                 }
             } else {
@@ -238,6 +262,7 @@ public class GameController {
             if (set != null && (set.getScene() != null)) {
                 if (r.getRehearsalChips() + 1 < set.getScene().getBudget()) {
                     r.incrementRehearsalChips();
+                    console.displayInfo("Rehearsed. Practice chips: " + r.getRehearsalChips());
                 }
                 else {
                     status = -1;
@@ -245,6 +270,7 @@ public class GameController {
             } else if (scene != null) {
                 if (r.getRehearsalChips() + 1 < scene.getBudget()) {
                     r.incrementRehearsalChips();
+                    console.displayInfo("Rehearsed. Practice chips: " + r.getRehearsalChips());
                 } else {
                     status = -1;
                 }
@@ -267,11 +293,9 @@ public class GameController {
         Room r = p.getPosition();
         if (r instanceof FilmSet && ((FilmSet) r).getScene() != null) {
             FilmSet set = (FilmSet) r;
-            List<Role> off_card_roles = set.getAvailableRoles();
-            List<Role> on_card_roles = set.getScene().getAvailableRoles();
             ArrayList<Role> all_roles = new ArrayList<>();
-            all_roles.addAll(off_card_roles);
-            all_roles.addAll(on_card_roles);
+            all_roles.addAll(getLegalRoles(p, set.getAvailableRoles()));
+            all_roles.addAll(getLegalRoles(p, set.getScene().getAvailableRoles()));
             if (!all_roles.isEmpty()) {
                 int i = 0;
                 String prompt = "Please select one of the following roles by index:\n";
@@ -280,16 +304,17 @@ public class GameController {
                     i++;
                 }
 
-                String response = console.promptUser(prompt);
-                int si = Integer.parseInt(response);
-                if (p.getRank() >= all_roles.get(si).getRank()) {
-                    p.setActiveRole(all_roles.get(si));
-                } else {
-                    console.displayInfo("Player rank too low for selected Role.");
+                Integer si = parseInteger(console.promptUser(prompt));
+                if (si == null || si < 0 || si >= all_roles.size()) {
+                    console.displayInfo("Invalid role choice.");
                     func_status = -1;
+                } else {
+                    p.setActiveRole(all_roles.get(si));
+                    console.displayInfo("Took role: " + all_roles.get(si).getName());
                 }
             } else {
-                console.displayInfo("No available roles.");
+                console.displayInfo("No available roles for your rank.");
+                func_status = -1;
             }
         } else {
             func_status = -1;
@@ -302,20 +327,14 @@ public class GameController {
         scenesRemaining = 0;
 
         for (Player p : players) {
-            Role role = p.getActiveRole();
-
-            if (role != null) {
-                role.setActor(null);
-                role.setRehearsalChips(0);
-                p.setActiveRole(null);
-            }
-
+            clearPlayerRole(p);
             p.setPosition(trailers);
         }
 
         for (Room room : board.getRooms()) {
             if (room instanceof FilmSet) {
                 FilmSet set = (FilmSet) room;
+                clearSetRoles(set);
                 resetRoles(set.getRoles());
                 set.resetShots();
                 set.setScene(null);
@@ -329,11 +348,49 @@ public class GameController {
         }
     }
 
+    private void clearPlayerRole(Player p) {
+        Role role = p.getActiveRole();
+
+        if (role != null) {
+            role.setActor(null);
+            role.setRehearsalChips(0);
+            p.setActiveRole(null);
+        }
+    }
+
+    private void clearSetRoles(FilmSet set) {
+        if (set.getScene() != null) {
+            resetRoles(set.getScene().getRoles());
+            set.getScene().setContainingSet(null);
+        }
+    }
+
+    private void endDay() {
+        daysRemaining--;
+
+        if (daysRemaining > 0) {
+            console.displayInfo("The day is over. Starting a new day.");
+            resetToNewDay();
+        }
+    }
+
     private void resetRoles(List<Role> roles) {
         for (Role role : roles) {
             role.setActor(null);
             role.setRehearsalChips(0);
         }
+    }
+
+    private List<Role> getLegalRoles(Player p, List<Role> roles) {
+        List<Role> legalRoles = new ArrayList<Role>();
+
+        for (Role role : roles) {
+            if (p.canTakeRole(role)) {
+                legalRoles.add(role);
+            }
+        }
+
+        return legalRoles;
     }
 
     public boolean verifyUpgrade(Player p, Integer rank) {
@@ -347,6 +404,130 @@ public class GameController {
     }
 
     private void concludeGame() {
+        Player winner = null;
+        int bestScore = -1;
+
+        console.displayInfo("Game over.");
+
+        for (Player player : players) {
+            int score = player.calculateScore();
+            console.displayInfo("Player " + (players.indexOf(player) + 1) + " score: " + score);
+
+            if (score > bestScore) {
+                bestScore = score;
+                winner = player;
+            }
+        }
+
+        console.displayInfo("Winner: Player " + (players.indexOf(winner) + 1));
+    }
+
+    private void displayTurnInfo() {
+        console.displayInfo("\nDays remaining: " + daysRemaining);
+        console.displayInfo("Scenes remaining: " + scenesRemaining);
+        console.displayInfo("Active player: Player " + (players.indexOf(activePlayer) + 1));
+        console.displayInfo(activePlayer.toString());
+        displayAvailableActions(false);
+    }
+
+    private void handleWorkingTurn() {
+        while (daysRemaining > 0) {
+            String action = console.promptUser("Choose an action: ").trim().toLowerCase();
+
+            if ("act".equals(action)) {
+                if (act(activePlayer) == 0) {
+                    return;
+                }
+                console.displayInfo("You cannot act right now.");
+            } else if ("rehearse".equals(action)) {
+                if (rehearse(activePlayer) == 0) {
+                    return;
+                }
+                console.displayInfo("You cannot rehearse right now.");
+            } else if ("state".equals(action)) {
+                displayGameState();
+            } else if ("help".equals(action)) {
+                displayAvailableActions(false);
+            } else if ("quit".equals(action)) {
+                daysRemaining = 0;
+                return;
+            } else {
+                console.displayInfo("You are working. You must act or rehearse.");
+            }
+        }
+    }
+
+    private void handleOpenTurn() {
+        boolean moved = false;
+
+        while (daysRemaining > 0) {
+            String action = console.promptUser("Choose an action: ").trim().toLowerCase();
+
+            if ("move".equals(action)) {
+                if (moved) {
+                    console.displayInfo("You can only move once per turn.");
+                } else if (movePlayer(activePlayer)) {
+                    moved = true;
+                    displayAvailableActions(moved);
+                }
+            } else if ("upgrade".equals(action)) {
+                if (upgrade(activePlayer)) {
+                    displayAvailableActions(moved);
+                }
+            } else if ("take role".equals(action) || "takerole".equals(action) || "take".equals(action)) {
+                if (takeRole(activePlayer) == 0) {
+                    return;
+                }
+                console.displayInfo("You cannot take a role right now.");
+            } else if ("end".equals(action) || "pass".equals(action)) {
+                return;
+            } else if ("state".equals(action)) {
+                displayGameState();
+            } else if ("help".equals(action)) {
+                displayAvailableActions(moved);
+            } else if ("quit".equals(action)) {
+                daysRemaining = 0;
+                return;
+            } else {
+                console.displayInfo("Unknown action. Type help to see actions.");
+            }
+        }
+    }
+
+    private void displayAvailableActions(boolean moved) {
+        if (activePlayer.isWorking()) {
+            console.displayInfo("Actions: act, rehearse, state, help, quit");
+            return;
+        }
+
+        String actions = "Actions:";
+
+        if (!moved) {
+            actions += " move,";
+        }
+
+        if (activePlayer.getPosition() instanceof FilmSet) {
+            FilmSet set = (FilmSet) activePlayer.getPosition();
+            if (hasLegalRole(activePlayer, set)) {
+                actions += " take role,";
+            }
+        }
+
+        if (activePlayer.getPosition() instanceof CastingOffice) {
+            actions += " upgrade,";
+        }
+
+        actions += " end, state, help, quit";
+        console.displayInfo(actions);
+    }
+
+    private boolean hasLegalRole(Player p, FilmSet set) {
+        if (set.getScene() == null) {
+            return false;
+        }
+
+        return !getLegalRoles(p, set.getAvailableRoles()).isEmpty()
+                || !getLegalRoles(p, set.getScene().getAvailableRoles()).isEmpty();
     }
 
     private Room findRoomChoice(String input, List<Room> rooms) {

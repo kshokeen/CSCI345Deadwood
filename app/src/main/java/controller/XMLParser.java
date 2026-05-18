@@ -3,6 +3,7 @@ package controller;
 import java.io.File;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -54,12 +55,15 @@ public class XMLParser {
         Document document = loadDocument(CARDS_FILE);
         Element root = document.getDocumentElement();
         NodeList cardNodes = root.getElementsByTagName("card");
+        List<Scene> sceneList = new ArrayList<Scene>();
         Queue<Scene> scenes = new LinkedList<Scene>();
 
         for (int i = 0; i < cardNodes.getLength(); i++) {
-            scenes.add(parseScene((Element) cardNodes.item(i)));
+            sceneList.add(parseScene((Element) cardNodes.item(i)));
         }
 
+        Collections.shuffle(sceneList);
+        scenes.addAll(sceneList);
         return scenes;
     }
 
