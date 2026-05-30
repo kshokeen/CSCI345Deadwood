@@ -19,6 +19,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import model.Board;
+import model.BoardArea;
 import model.CastingOffice;
 import model.FilmSet;
 import model.Role;
@@ -112,11 +113,15 @@ public class XMLParser {
             String name = roomElement.getAttribute("name");
             List<Integer> takeNumbers = parseTakeNumbers(roomElement);
             FilmSet set = new FilmSet(name, takeNumbers.size());
+            set.setArea(parseArea(getFirstDirectChild(roomElement, "area")));
+            set.setShotAreas(parseTakeAreas(roomElement));
             List<Role> roles = parseRoles(roomElement, set);
             set.setRoles(roles);
             return set;
         } else if ("trailer".equals(nodeName)) {
-            return new Trailers("trailer");
+            Trailers trailers = new Trailers("trailer");
+            trailers.setArea(parseArea(getFirstDirectChild(roomElement, "area")));
+            return trailers;
         } else if ("office".equals(nodeName)) {
             return parseCastingOffice(roomElement);
         }
@@ -129,7 +134,10 @@ public class XMLParser {
         List<Role> roles = new ArrayList<Role>();
 
         for (int i = 0; i < partNodes.getLength(); i++) {
-            roles.add(parseRole((Element) partNodes.item(i), set));
+            Element partElement = (Element) partNodes.item(i);
+            if (partElement.getParentNode() == getFirstDirectChild(parentElement, "parts")) {
+                roles.add(parseRole(partElement, set));
+            }
         }
 
         return roles;
@@ -152,7 +160,9 @@ public class XMLParser {
         Element lineElement = getFirstDirectChild(partElement, "line");
         String line = lineElement.getTextContent().trim();
 
-        return new Role(name, rank, line, set);
+        Role role = new Role(name, rank, line, set);
+        role.setArea(parseArea(getFirstDirectChild(partElement, "area")));
+        return role;
     }
 
     private Role parseRole(Element partElement, Scene scene) {
@@ -161,7 +171,9 @@ public class XMLParser {
         Element lineElement = getFirstDirectChild(partElement, "line");
         String line = lineElement.getTextContent().trim();
 
-        return new Role(name, rank, line, scene);
+        Role role = new Role(name, rank, line, scene);
+        role.setArea(parseArea(getFirstDirectChild(partElement, "area")));
+        return role;
     }
 
     private List<Integer> parseTakeNumbers(Element setElement) {
@@ -184,6 +196,7 @@ public class XMLParser {
 
     private CastingOffice parseCastingOffice(Element officeElement) {
         CastingOffice office = new CastingOffice("office");
+        office.setArea(parseArea(getFirstDirectChild(officeElement, "area")));
         Element upgradesElement = getFirstDirectChild(officeElement, "upgrades");
 
         if (upgradesElement == null) {
@@ -201,6 +214,36 @@ public class XMLParser {
         }
 
         return office;
+    }
+
+    private List<BoardArea> parseTakeAreas(Element setElement) {
+        List<BoardArea> areas = new ArrayList<BoardArea>();
+        Element takesElement = getFirstDirectChild(setElement, "takes");
+
+        if (takesElement == null) {
+            return areas;
+        }
+
+        NodeList takeNodes = takesElement.getElementsByTagName("take");
+
+        for (int i = 0; i < takeNodes.getLength(); i++) {
+            Element takeElement = (Element) takeNodes.item(i);
+            areas.add(parseArea(getFirstDirectChild(takeElement, "area")));
+        }
+
+        return areas;
+    }
+
+    private BoardArea parseArea(Element areaElement) {
+        if (areaElement == null) {
+            return null;
+        }
+
+        int x = parseIntegerAttribute(areaElement, "x");
+        int y = parseIntegerAttribute(areaElement, "y");
+        int h = parseIntegerAttribute(areaElement, "h");
+        int w = parseIntegerAttribute(areaElement, "w");
+        return new BoardArea(x, y, w, h);
     }
 
     private List<Room> parseAdjacentRooms(Element roomElement, Map<String, Room> roomsByName) {

@@ -8,6 +8,7 @@ public class Role {
     private Player actor;
     private FilmSet parentSet;
     private Scene parentScene;
+    private BoardArea area;
 
     public Role(String name, Integer rank) {
         this(name, rank, null);
@@ -93,6 +94,14 @@ public class Role {
 
     public Scene getParentScene() {
         return parentScene;
+    }
+
+    public BoardArea getArea() {
+        return area;
+    }
+
+    public void setArea(BoardArea area) {
+        this.area = area;
     }
 
     public void reset() {

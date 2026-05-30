@@ -31,7 +31,7 @@ public class VisualGameController {
         this.bll = new BoardLayersListener();
         bll.setVisible(true);
         String nPlayerStr = JOptionPane.showInputDialog(bll, "How many players?");
-        int nPlayers = new Integer(nPlayerStr).intValue();
+        int nPlayers = parsePlayerCount(nPlayerStr);
         if (nPlayers < 2 || nPlayers > 8) {
             console.displayInfo("Invalid number of Players: " + nPlayers +
                     "\nPlayer count must be between 2 and 8.");
@@ -77,7 +77,23 @@ public class VisualGameController {
         }
 
         resetToNewDay();
-        gameLoop();
+        refreshView();
+    }
+
+    private int parsePlayerCount(String nPlayerStr) {
+        if (nPlayerStr == null) {
+            return -1;
+        }
+
+        try {
+            return Integer.parseInt(nPlayerStr);
+        } catch (NumberFormatException e) {
+            return -1;
+        }
+    }
+
+    private void refreshView() {
+        bll.refresh(board, players, activePlayer, daysRemaining, scenesRemaining);
     }
 
     private void gameLoop() {
@@ -349,6 +365,7 @@ public class VisualGameController {
                 if (!scenesDeck.isEmpty()) {
                     set.setScene(scenesDeck.poll());
                     set.getScene().setContainingSet(set);
+                    set.hideScene();
                     scenesRemaining++;
                 }
             }

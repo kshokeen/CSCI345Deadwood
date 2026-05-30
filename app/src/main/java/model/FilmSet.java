@@ -10,6 +10,8 @@ public class FilmSet extends Room {
     private Integer shotsRemaining;
     private Scene scene;
     private List<Role> roles;
+    private List<BoardArea> shotAreas;
+    private boolean revealed;
 
     public FilmSet(String name, Integer shotsOnBoard) {
         this(name, shotsOnBoard, null);
@@ -19,6 +21,8 @@ public class FilmSet extends Room {
         this.name = name;
         this.shotsOnBoard = shotsOnBoard;
         this.roles = roles;
+        this.shotAreas = new ArrayList<BoardArea>();
+        this.revealed = false;
 
         resetShotsRemaining();
     }
@@ -103,6 +107,7 @@ public class FilmSet extends Room {
 
     public void setScene(Scene scene) {
         this.scene = scene;
+        this.revealed = false;
     }
 
     public Scene getScene() {
@@ -134,6 +139,14 @@ public class FilmSet extends Room {
         this.roles = roles;
     }
 
+    public List<BoardArea> getShotAreas() {
+        return shotAreas;
+    }
+
+    public void setShotAreas(List<BoardArea> shotAreas) {
+        this.shotAreas = shotAreas;
+    }
+
     public List<Role> getAvailableRoles() {
         List<Role> openRoles = new ArrayList<Role>();
 
@@ -148,6 +161,18 @@ public class FilmSet extends Room {
 
     public boolean hasScene() {
         return scene != null;
+    }
+
+    public boolean isRevealed() {
+        return revealed;
+    }
+
+    public void reveal() {
+        revealed = true;
+    }
+
+    public void hideScene() {
+        revealed = false;
     }
 
     public boolean isWrapped() {

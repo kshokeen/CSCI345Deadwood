@@ -26,6 +26,7 @@ public class Player {
     public void move(Room room) {
         if (this.position != null && this.position.getAdjacentRooms().contains(room)) {
             this.position = room;
+            revealCurrentSet();
         }
     }
 
@@ -66,6 +67,7 @@ public class Player {
 
     public void setPosition(Room position) {
         this.position = position;
+        revealCurrentSet();
     }
 
     public Role getActiveRole() {
@@ -115,6 +117,12 @@ public class Player {
 
     public boolean isWorking() {
         return activeRole != null;
+    }
+
+    private void revealCurrentSet() {
+        if (position instanceof FilmSet) {
+            ((FilmSet) position).reveal();
+        }
     }
 
     public Integer calculateScore() {
