@@ -272,4 +272,8 @@ public class BoardLayersListener extends JFrame {
     public void displayPopup(String message) {
         JOptionPane.showMessageDialog(pane, message);
     }
+
+    public void errorPopup(String message) {
+        JOptionPane.showMessageDialog(pane, message, "Deadwood: ERROR", JOptionPane.ERROR_MESSAGE);
+    }
 }

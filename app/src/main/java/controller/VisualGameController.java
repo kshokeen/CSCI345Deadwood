@@ -35,8 +35,9 @@ public class VisualGameController implements ActionListener {
         String nPlayerStr = JOptionPane.showInputDialog(bll, "How many players?");
         int nPlayers = parsePlayerCount(nPlayerStr);
         if (nPlayers < 2 || nPlayers > 8) {
-            console.displayInfo("Invalid number of Players: " + nPlayers +
+            bll.errorPopup("Invalid number of Players: " + nPlayers +
                     "\nPlayer count must be between 2 and 8.");
+            System.exit(1);
         } else {
             setupGame(nPlayers);
         }
@@ -124,16 +125,14 @@ public class VisualGameController implements ActionListener {
     }
 
     private void advanceActivePlayer() {
-        int previousPlayer = players.indexOf(activePlayer) + 1;
         int i = players.indexOf(activePlayer);
         if (i >= 0 && i < players.size() - 1) {
             activePlayer = players.get(i + 1);
         } else {
-            activePlayer = players.get(0);
+            activePlayer = players.getFirst();
         }
 
-        console.displayInfo("Player " + previousPlayer + "'s turn ended.");
-        console.displayInfo("It is now Player " + (players.indexOf(activePlayer) + 1) + "'s turn.");
+        bll.refresh(board, players, activePlayer, daysRemaining, scenesRemaining);
     }
 
     private boolean movePlayer(Player p) {
