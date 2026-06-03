@@ -15,6 +15,7 @@ import javax.swing.JLayeredPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
+import controller.VisualGameController;
 import model.Board;
 import model.BoardArea;
 import model.FilmSet;
@@ -32,6 +33,7 @@ public class BoardLayersListener extends JFrame {
     private static final int SIDE_WIDTH = 245;
     private static final int MAX_PLAYERS = 8;
 
+    private final VisualGameController visualGameController;
     private final JLayeredPane pane;
     private final JLabel boardLabel;
     private final JPanel buttonPanel;
@@ -41,8 +43,9 @@ public class BoardLayersListener extends JFrame {
     private final List<JLabel> dynamicLabels;
     private final String[] diceColors = {"r", "b", "g", "y", "c", "p", "o", "v"};
 
-    public BoardLayersListener() {
+    public BoardLayersListener(VisualGameController visualGameController) {
         super("Deadwood");
+        this.visualGameController = visualGameController;
         setDefaultCloseOperation(EXIT_ON_CLOSE);
 
         dynamicLabels = new ArrayList<JLabel>();
@@ -251,6 +254,8 @@ public class BoardLayersListener extends JFrame {
     private void addButton(String label, int x, int y) {
         JButton button = new JButton(label);
         button.setBounds(x, y, 115, 40);
+        button.setActionCommand(label);
+        button.addActionListener(this.visualGameController);
         buttonPanel.add(button);
     }
 

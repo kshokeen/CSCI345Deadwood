@@ -1,5 +1,7 @@
 package controller;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
@@ -16,7 +18,7 @@ import model.Scene;
 import view.Console;
 import view.BoardLayersListener;
 
-public class VisualGameController {
+public class VisualGameController implements ActionListener {
     private BoardLayersListener bll;
     private Console console;
     private Board board;
@@ -28,7 +30,7 @@ public class VisualGameController {
 
     public VisualGameController() {
         this.console = new Console();
-        this.bll = new BoardLayersListener();
+        this.bll = new BoardLayersListener(this);
         bll.setVisible(true);
         String nPlayerStr = JOptionPane.showInputDialog(bll, "How many players?");
         int nPlayers = parsePlayerCount(nPlayerStr);
@@ -602,5 +604,34 @@ public class VisualGameController {
 
     public Player getActivePlayer() {
         return this.activePlayer;
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        switch (e.getActionCommand()){
+            case "ACT":
+                act(activePlayer);
+                break;
+            case "REHEARSE":
+                rehearse(activePlayer);
+                break;
+            case "MOVE":
+                movePlayer(activePlayer);
+                break;
+            case "UPGRADE":
+                upgrade(activePlayer);
+                break;
+            case "TAKE ROLE":
+                takeRole(activePlayer);
+                break;
+            case "END TURN":
+                advanceActivePlayer();
+                break;
+            case "QUIT":
+                concludeGame();
+                break;
+            default:
+                break;
+        }
     }
 }
