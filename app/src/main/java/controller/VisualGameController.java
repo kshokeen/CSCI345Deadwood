@@ -432,12 +432,11 @@ public class VisualGameController implements ActionListener {
     private void concludeGame() {
         Player winner = null;
         int bestScore = -1;
-
-        console.displayInfo("Game over.");
+        StringBuffer sb = new StringBuffer();
 
         for (Player player : players) {
             int score = player.calculateScore();
-            console.displayInfo("Player " + (players.indexOf(player) + 1) + " score: " + score);
+            sb.append("Player " + (players.indexOf(player) + 1) + " score: " + score + "\n");
 
             if (score > bestScore) {
                 bestScore = score;
@@ -445,7 +444,9 @@ public class VisualGameController implements ActionListener {
             }
         }
 
-        console.displayInfo("Winner: Player " + (players.indexOf(winner) + 1));
+        sb.append("\nWinner: Player " + (players.indexOf(winner) + 1));
+        bll.displayPopup(sb.toString());
+        System.exit(0);
     }
 
     private void displayTurnInfo() {

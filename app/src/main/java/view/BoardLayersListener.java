@@ -7,13 +7,7 @@ import java.awt.Toolkit;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JLayeredPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
+import javax.swing.*;
 
 import controller.VisualGameController;
 import model.Board;
@@ -273,5 +267,9 @@ public class BoardLayersListener extends JFrame {
 
     private ImageIcon loadIcon(String path) {
         return new ImageIcon(getClass().getResource(path));
+    }
+
+    public void displayPopup(String message) {
+        JOptionPane.showMessageDialog(pane, message);
     }
 }
