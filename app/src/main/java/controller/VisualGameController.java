@@ -3,6 +3,7 @@ package controller;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 import java.util.Random;
@@ -27,6 +28,8 @@ public class VisualGameController implements ActionListener {
     private int scenesRemaining;
     private List<Player> players;
     private Player activePlayer;
+    private boolean movedThisTurn;
+    private GameSnapshot undoSnapshot;
 
     public VisualGameController() {
         this.console = new Console();
@@ -56,6 +59,8 @@ public class VisualGameController implements ActionListener {
         }
 
         activePlayer = players.get(0);
+        movedThisTurn = false;
+        undoSnapshot = null;
 
         if (nPlayers < 4) {
             daysRemaining = 3;
@@ -99,6 +104,21 @@ public class VisualGameController implements ActionListener {
         bll.refresh(board, players, activePlayer, daysRemaining, scenesRemaining);
     }
 
+    private void saveUndoSnapshot() {
+        undoSnapshot = new GameSnapshot();
+    }
+
+    private void undoLastAction() {
+        if (undoSnapshot == null) {
+            bll.errorPopup("There is no action to undo.");
+            return;
+        }
+
+        undoSnapshot.restore();
+        undoSnapshot = null;
+        refreshView();
+    }
+
     private void gameLoop() {
         while (daysRemaining > 0) {
             displayTurnInfo();
@@ -129,10 +149,108 @@ public class VisualGameController implements ActionListener {
         if (i >= 0 && i < players.size() - 1) {
             activePlayer = players.get(i + 1);
         } else {
-            activePlayer = players.getFirst();
+            activePlayer = players.get(0);
         }
 
+        movedThisTurn = false;
         bll.refresh(board, players, activePlayer, daysRemaining, scenesRemaining);
+    }
+
+    private boolean movePlayerGui(Player p) {
+        if (p == null) {
+            return false;
+        }
+
+        if (p.isWorking()) {
+            bll.errorPopup("You cannot move while working on a role.");
+            return false;
+        }
+
+        if (movedThisTurn) {
+            bll.errorPopup("You can only move once per turn.");
+            return false;
+        }
+
+        Room current = p.getPosition();
+        if (current == null || current.getAdjacentRooms() == null || current.getAdjacentRooms().isEmpty()) {
+            bll.errorPopup("There are no available rooms to move to.");
+            return false;
+        }
+
+        List<Room> rooms = current.getAdjacentRooms();
+        Room nextRoom = (Room) JOptionPane.showInputDialog(bll, "Choose a room to move to:",
+                "Move", JOptionPane.PLAIN_MESSAGE, null, rooms.toArray(), rooms.get(0));
+
+        if (nextRoom == null) {
+            return false;
+        }
+
+        p.move(nextRoom);
+        movedThisTurn = true;
+        bll.displayPopup("Moved to " + p.getPosition().getName() + ".");
+        return true;
+    }
+
+    private boolean upgradeGui(Player p) {
+        if (p == null) {
+            return false;
+        }
+
+        if (p.isWorking()) {
+            bll.errorPopup("You cannot upgrade while working on a role.");
+            return false;
+        }
+
+        if (!(p.getPosition() instanceof CastingOffice)) {
+            bll.errorPopup("You must be in the casting office to upgrade.");
+            return false;
+        }
+
+        CastingOffice office = (CastingOffice) p.getPosition();
+        List<Integer> ranks = new ArrayList<Integer>();
+        for (Integer rank : office.getUpgradeRanks()) {
+            if (rank > p.getRank()) {
+                ranks.add(rank);
+            }
+        }
+
+        if (ranks.isEmpty()) {
+            bll.errorPopup("There are no valid rank upgrades available.");
+            return false;
+        }
+
+        Integer rank = (Integer) JOptionPane.showInputDialog(bll, "Choose a rank to upgrade to:",
+                "Upgrade", JOptionPane.PLAIN_MESSAGE, null, ranks.toArray(), ranks.get(0));
+
+        if (rank == null) {
+            return false;
+        }
+
+        List<String> currencies = new ArrayList<String>();
+        if (office.getDollarCost(rank) != null) {
+            currencies.add("dollar");
+        }
+        if (office.getCreditCost(rank) != null) {
+            currencies.add("credit");
+        }
+
+        String currency = (String) JOptionPane.showInputDialog(bll, "Choose how to pay:",
+                "Upgrade", JOptionPane.PLAIN_MESSAGE, null, currencies.toArray(), currencies.get(0));
+
+        if (currency == null) {
+            return false;
+        }
+
+        Integer cost = office.getUpgradeCost(rank, currency);
+        if (!p.canPay(currency, cost)) {
+            bll.errorPopup("You do not have enough " + currency + "s for that upgrade.");
+            return false;
+        }
+
+        p.pay(currency, cost);
+        p.setRank(rank);
+        bll.displayPopup("Upgraded to rank " + rank + ".");
+        return true;
     }
 
     private boolean movePlayer(Player p) {
@@ -220,7 +338,7 @@ public class VisualGameController implements ActionListener {
      * @param p player which is to act.
      * @return 0 when function runs without errors. -1 otherwise.
      */
-     int act(Player p) {
+    int act(Player p) {
         int func_status = 0;
         if (p.getActiveRole() != null) {
             Random random = new Random();
@@ -228,7 +346,7 @@ public class VisualGameController implements ActionListener {
             if (p.getActiveRole().getParentScene() != null) {
                 // On Card Role
                 if (roll + p.getActiveRole().getRehearsalChips() >= p.getActiveRole().getParentScene().getBudget()) {
-                    console.displayInfo("Rolled " + roll + ". Success!");
+                    bll.displayPopup("Rolled " + roll + ". Success!");
                     p.setCredits(p.getCredits() + 2);
                     int status = p.getActiveRole().getParentScene().getContainingSet().removeShotCounter();
                     if (status == 0) {
@@ -240,12 +358,12 @@ public class VisualGameController implements ActionListener {
                         func_status = -1;
                     }
                 } else {
-                    console.displayInfo("Rolled " + roll + ". Failed.");
+                    bll.displayPopup("Rolled " + roll + ". Failed.");
                 }
             } else if(p.getActiveRole().getParentSet() != null) {
                 // Off Card Role
                 if (roll + p.getActiveRole().getRehearsalChips() >= p.getActiveRole().getParentSet().getScene().getBudget()) {
-                    console.displayInfo("Rolled " + roll + ". Success!");
+                    bll.displayPopup("Rolled " + roll + ". Success!");
                     p.setCredits(p.getCredits() + 1);
                     p.setDollars(p.getDollars() + 1);
                     int status = p.getActiveRole().getParentSet().removeShotCounter();
@@ -258,7 +376,7 @@ public class VisualGameController implements ActionListener {
                         func_status = -1;
                     }
                 } else {
-                    console.displayInfo("Rolled " + roll + ". Failed, but off-card roles still earn $1.");
+                    bll.displayPopup("Rolled " + roll + ". Failed, but off-card roles still earn $1.");
                     p.setDollars(p.getDollars() + 1);
                 }
             } else {
@@ -266,6 +384,9 @@ public class VisualGameController implements ActionListener {
             }
         } else {
             func_status = -1;
+        }
+        if (func_status == -1) {
+            bll.errorPopup("You cannot act right now.");
         }
         return  func_status;
     }
@@ -286,7 +407,7 @@ public class VisualGameController implements ActionListener {
             if (set != null && (set.getScene() != null)) {
                 if (r.getRehearsalChips() + 1 < set.getScene().getBudget()) {
                     r.incrementRehearsalChips();
-                    console.displayInfo("Rehearsed. Practice chips: " + r.getRehearsalChips());
+                    bll.displayPopup("Rehearsed. Practice chips: " + r.getRehearsalChips());
                 }
                 else {
                     status = -1;
@@ -294,7 +415,7 @@ public class VisualGameController implements ActionListener {
             } else if (scene != null) {
                 if (r.getRehearsalChips() + 1 < scene.getBudget()) {
                     r.incrementRehearsalChips();
-                    console.displayInfo("Rehearsed. Practice chips: " + r.getRehearsalChips());
+                    bll.displayPopup("Rehearsed. Practice chips: " + r.getRehearsalChips());
                 } else {
                     status = -1;
                 }
@@ -304,7 +425,41 @@ public class VisualGameController implements ActionListener {
         } else {
             status = -1;
         }
+        if (status == -1) {
+            bll.errorPopup("You cannot rehearse right now.");
+        }
         return status;
+    }
+
+    private int takeRoleGui(Player p) {
+        int funcStatus = 0;
+        Room room = p.getPosition();
+        if (room instanceof FilmSet && ((FilmSet) room).getScene() != null) {
+            FilmSet set = (FilmSet) room;
+            ArrayList<Role> roles = new ArrayList<Role>();
+            roles.addAll(getLegalRoles(p, set.getAvailableRoles()));
+            roles.addAll(getLegalRoles(p, set.getScene().getAvailableRoles()));
+
+            if (!roles.isEmpty()) {
+                Role role = (Role) JOptionPane.showInputDialog(bll, "Choose a role:",
+                        "Take Role", JOptionPane.PLAIN_MESSAGE, null, roles.toArray(), roles.get(0));
+
+                if (role == null) {
+                    funcStatus = -1;
+                } else {
+                    p.setActiveRole(role);
+                    bll.displayPopup("Took role: " + role.getName());
+                }
+            } else {
+                bll.errorPopup("No available roles for your rank.");
+                funcStatus = -1;
+            }
+        } else {
+            bll.errorPopup("You cannot take a role right now.");
+            funcStatus = -1;
+        }
+
+        return funcStatus;
     }
 
     /** takeRole
@@ -608,21 +763,39 @@ public class VisualGameController implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
+        if (daysRemaining <= 0) {
+            concludeGame();
+            return;
+        }
+
+        if ("UNDO".equals(e.getActionCommand())) {
+            undoLastAction();
+            return;
+        }
+
+        saveUndoSnapshot();
+
         switch (e.getActionCommand()){
             case "ACT":
-                act(activePlayer);
+                if (act(activePlayer) == 0 && daysRemaining > 0) {
+                    advanceActivePlayer();
+                }
                 break;
             case "REHEARSE":
-                rehearse(activePlayer);
+                if (rehearse(activePlayer) == 0 && daysRemaining > 0) {
+                    advanceActivePlayer();
+                }
                 break;
             case "MOVE":
-                movePlayer(activePlayer);
+                movePlayerGui(activePlayer);
                 break;
             case "UPGRADE":
-                upgrade(activePlayer);
+                upgradeGui(activePlayer);
                 break;
             case "TAKE ROLE":
-                takeRole(activePlayer);
+                if (takeRoleGui(activePlayer) == 0 && daysRemaining > 0) {
+                    advanceActivePlayer();
+                }
                 break;
             case "END TURN":
                 advanceActivePlayer();
@@ -631,7 +804,156 @@ public class VisualGameController implements ActionListener {
                 concludeGame();
                 break;
             default:
+                undoSnapshot = null;
                 break;
+        }
+
+        if (daysRemaining <= 0) {
+            concludeGame();
+            return;
+        }
+
+        refreshView();
+    }
+
+    private class GameSnapshot {
+        private int savedDaysRemaining;
+        private int savedScenesRemaining;
+        private boolean savedMovedThisTurn;
+        private int savedActivePlayerIndex;
+        private Queue<Scene> savedScenesDeck;
+        private List<PlayerState> playerStates;
+        private List<SetState> setStates;
+        private List<RoleState> roleStates;
+
+        GameSnapshot() {
+            savedDaysRemaining = daysRemaining;
+            savedScenesRemaining = scenesRemaining;
+            savedMovedThisTurn = movedThisTurn;
+            savedActivePlayerIndex = players.indexOf(activePlayer);
+            savedScenesDeck = new LinkedList<Scene>(scenesDeck);
+            playerStates = new ArrayList<PlayerState>();
+            setStates = new ArrayList<SetState>();
+            roleStates = new ArrayList<RoleState>();
+
+            for (Player player : players) {
+                playerStates.add(new PlayerState(player));
+            }
+
+            for (Room room : board.getRooms()) {
+                if (room instanceof FilmSet) {
+                    FilmSet set = (FilmSet) room;
+                    setStates.add(new SetState(set));
+                    saveRoles(set.getRoles());
+                    if (set.getScene() != null) {
+                        saveRoles(set.getScene().getRoles());
+                    }
+                }
+            }
+        }
+
+        private void saveRoles(List<Role> roles) {
+            for (Role role : roles) {
+                roleStates.add(new RoleState(role));
+            }
+        }
+
+        void restore() {
+            daysRemaining = savedDaysRemaining;
+            scenesRemaining = savedScenesRemaining;
+            movedThisTurn = savedMovedThisTurn;
+            scenesDeck = new LinkedList<Scene>(savedScenesDeck);
+
+            for (RoleState roleState : roleStates) {
+                roleState.clear();
+            }
+
+            for (SetState setState : setStates) {
+                setState.restore();
+            }
+
+            for (RoleState roleState : roleStates) {
+                roleState.restore();
+            }
+
+            for (int i = 0; i < players.size(); i++) {
+                playerStates.get(i).restore(players.get(i));
+            }
+
+            activePlayer = players.get(savedActivePlayerIndex);
+        }
+    }
+
+    private class PlayerState {
+        private int dollars;
+        private int credits;
+        private int rank;
+        private Room position;
+        private Role activeRole;
+
+        PlayerState(Player player) {
+            dollars = player.getDollars();
+            credits = player.getCredits();
+            rank = player.getRank();
+            position = player.getPosition();
+            activeRole = player.getActiveRole();
+        }
+
+        void restore(Player player) {
+            player.setDollars(dollars);
+            player.setCredits(credits);
+            player.setRank(rank);
+            player.setPosition(position);
+            player.setActiveRole(activeRole);
+        }
+    }
+
+    private class SetState {
+        private FilmSet set;
+        private Scene scene;
+        private int shotsRemaining;
+        private boolean revealed;
+
+        SetState(FilmSet set) {
+            this.set = set;
+            scene = set.getScene();
+            shotsRemaining = set.getShotsRemaining();
+            revealed = set.isRevealed();
+        }
+
+        void restore() {
+            set.setScene(scene);
+            set.setShotsRemaining(shotsRemaining);
+            if (scene != null) {
+                scene.setContainingSet(set);
+            }
+            if (revealed) {
+                set.reveal();
+            } else {
+                set.hideScene();
+            }
+        }
+    }
+
+    private class RoleState {
+        private Role role;
+        private Player actor;
+        private int rehearsalChips;
+
+        RoleState(Role role) {
+            this.role = role;
+            actor = role.getActor();
+            rehearsalChips = role.getRehearsalChips();
+        }
+
+        void clear() {
+            role.setActor(null);
+            role.setRehearsalChips(0);
+        }
+
+        void restore() {
+            role.setActor(actor);
+            role.setRehearsalChips(rehearsalChips);
         }
     }
 }

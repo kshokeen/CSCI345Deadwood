@@ -24,7 +24,7 @@ public class BoardLayersListener extends JFrame {
     private static final int TOKEN_LAYER = 2;
     private static final int PLAYER_LAYER = 3;
     private static final int BUTTON_HEIGHT = 85;
-    private static final int SIDE_WIDTH = 245;
+    private static final int SIDE_WIDTH = 330;
     private static final int MAX_PLAYERS = 8;
 
     private final VisualGameController visualGameController;
@@ -61,10 +61,10 @@ public class BoardLayersListener extends JFrame {
 
         statusLabel = new JLabel("", JLabel.CENTER);
         statusLabel.setOpaque(true);
-        statusLabel.setBackground(Color.WHITE);
+        statusLabel.setBackground(new Color(255, 244, 205));
         statusLabel.setForeground(Color.BLACK);
-        statusLabel.setFont(new Font("SansSerif", Font.BOLD, 14));
-        statusLabel.setBounds(15, 15, SIDE_WIDTH - 30, 70);
+        statusLabel.setFont(new Font("SansSerif", Font.BOLD, 16));
+        statusLabel.setBounds(15, 15, SIDE_WIDTH - 30, 80);
         sidePanel.add(statusLabel);
 
         buttonPanel = new JPanel(null);
@@ -74,7 +74,7 @@ public class BoardLayersListener extends JFrame {
 
         JLabel menuLabel = new JLabel("Deadwood");
         menuLabel.setFont(new Font("SansSerif", Font.BOLD, 18));
-        menuLabel.setBounds(15, 95, SIDE_WIDTH - 30, 25);
+        menuLabel.setBounds(15, 105, SIDE_WIDTH - 30, 25);
         sidePanel.add(menuLabel);
 
         playerPanels = new JPanel[MAX_PLAYERS];
@@ -84,7 +84,7 @@ public class BoardLayersListener extends JFrame {
         for (int i = 0; i < MAX_PLAYERS; i++) {
             JPanel playerPanel = new JPanel(null);
             playerPanel.setBackground(new Color(245, 245, 245));
-            playerPanel.setBounds(15, 125 + i * panelHeight, panelWidth, panelHeight - 6);
+            playerPanel.setBounds(15, 135 + i * panelHeight, panelWidth, panelHeight - 6);
             sidePanel.add(playerPanel);
             playerPanels[i] = playerPanel;
         }
@@ -96,6 +96,7 @@ public class BoardLayersListener extends JFrame {
         addButton("TAKE ROLE", 520, 15);
         addButton("END TURN", 645, 15);
         addButton("QUIT", 770, 15);
+        addButton("UNDO", 895, 15);
 
         JScrollPane scrollPane = new JScrollPane(pane);
         setContentPane(scrollPane);
@@ -180,8 +181,10 @@ public class BoardLayersListener extends JFrame {
                 String color = diceColors[i % diceColors.length];
                 ImageIcon dieIcon = loadIcon("/images/Dice/" + color + player.getRank() + ".png");
                 JLabel die = new JLabel(dieIcon);
-                int offset = (i % 4) * 12;
-                die.setBounds(area.getX() + offset, area.getY() + offset, 40, 40);
+                int offset = player.getActiveRole() == null ? (i % 4) * 12 : 0;
+                int x = area.getX() + ((area.getWidth() - 40) / 2) + offset;
+                int y = area.getY() + ((area.getHeight() - 40) / 2) + offset;
+                die.setBounds(x, y, 40, 40);
                 addDynamic(die, PLAYER_LAYER);
             }
         }
@@ -191,19 +194,60 @@ public class BoardLayersListener extends JFrame {
         Role role = player.getActiveRole();
 
         if (role != null && role.getArea() != null) {
+            if (role.getParentScene() != null && role.getParentScene().getContainingSet() != null
+                    && role.getParentScene().getContainingSet().getArea() != null) {
+                BoardArea roleArea = role.getArea();
+                BoardArea setArea = role.getParentScene().getContainingSet().getArea();
+                return new BoardArea(setArea.getX() + roleArea.getX(), setArea.getY() + roleArea.getY(),
+                        roleArea.getWidth(), roleArea.getHeight());
+            }
+
             return role.getArea();
         }
 
         if (player.getPosition() != null) {
-            return player.getPosition().getArea();
+            return getRoomPlayerArea(player.getPosition());
         }
 
         return null;
     }
 
+    private BoardArea getRoomPlayerArea(Room room) {
+        String name = room.getName();
+
+        if ("Train Station".equals(name)) {
+            return new BoardArea(180, 190, 80, 60);
+        } else if ("Jail".equals(name)) {
+            return new BoardArea(450, 205, 80, 60);
+        } else if ("Main Street".equals(name)) {
+            return new BoardArea(1040, 165, 80, 60);
+        } else if ("General Store".equals(name)) {
+            return new BoardArea(410, 415, 80, 60);
+        } else if ("Saloon".equals(name)) {
+            return new BoardArea(670, 405, 80, 60);
+        } else if ("Bank".equals(name)) {
+            return new BoardArea(690, 600, 80, 60);
+        } else if ("Ranch".equals(name)) {
+            return new BoardArea(310, 610, 80, 60);
+        } else if ("Church".equals(name)) {
+            return new BoardArea(690, 855, 80, 45);
+        } else if ("Secret Hideout".equals(name)) {
+            return new BoardArea(255, 850, 80, 45);
+        } else if ("Hotel".equals(name)) {
+            return new BoardArea(1015, 855, 80, 45);
+        } else if ("trailer".equals(name)) {
+            return new BoardArea(1040, 300, 100, 80);
+        } else if ("office".equals(name)) {
+            return new BoardArea(25, 610, 100, 50);
+        }
+
+        return room.getArea();
+    }
+
     private void updateInfo(List<Player> players, Player activePlayer, int daysRemaining, int scenesRemaining) {
         statusLabel.setText("<html><center>Day: " + daysRemaining + "<br>Scenes Left: " + scenesRemaining
-                + "<br>Player " + (players.indexOf(activePlayer) + 1) + "'s Turn</center></html>");
+                + "<br><span style='font-size:18px'>PLAYER " + (players.indexOf(activePlayer) + 1)
+                + "'S TURN</span></center></html>");
 
         for (int i = 0; i < playerPanels.length; i++) {
             playerPanels[i].removeAll();
@@ -221,22 +265,23 @@ public class BoardLayersListener extends JFrame {
 
             JPanel playerPanel = playerPanels[i];
             if (player == activePlayer) {
-                playerPanel.setBackground(new Color(235, 244, 255));
+                playerPanel.setBackground(new Color(255, 244, 205));
             }
 
             JLabel name = new JLabel("Player " + (i + 1));
-            name.setForeground(player == activePlayer ? new Color(180, 40, 40) : Color.BLACK);
+            name.setText(player == activePlayer ? ">> Player " + (i + 1) : "Player " + (i + 1));
+            name.setForeground(player == activePlayer ? new Color(170, 35, 35) : Color.BLACK);
             name.setFont(new Font("SansSerif", Font.BOLD, 13));
-            name.setBounds(0, 0, 80, 18);
+            name.setBounds(0, 0, 120, 18);
             playerPanel.add(name);
 
             JLabel money = new JLabel("Rank: " + player.getRank() + "   $: " + player.getDollars()
                     + "   Credits: " + player.getCredits());
-            money.setBounds(0, 17, 240, 16);
+            money.setBounds(0, 17, 300, 16);
             playerPanel.add(money);
 
             JLabel place = new JLabel(room + " | " + role);
-            place.setBounds(0, 34, 220, 16);
+            place.setBounds(0, 34, 300, 16);
             playerPanel.add(place);
         }
 
