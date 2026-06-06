@@ -5,6 +5,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
+/**
+ * A board room that can hold a scene, shot counters, and off-card roles.
+ */
 public class FilmSet extends Room {
     private final Integer shotsOnBoard;
     private Integer shotsRemaining;
@@ -167,10 +170,16 @@ public class FilmSet extends Room {
         return revealed;
     }
 
+    /**
+     * Marks the scene card face-up after a player enters this set.
+     */
     public void reveal() {
         revealed = true;
     }
 
+    /**
+     * Hides the scene card at the start of a new day.
+     */
     public void hideScene() {
         revealed = false;
     }

@@ -32,6 +32,7 @@ public class VisualGameController implements ActionListener {
     private GameSnapshot undoSnapshot;
 
     public VisualGameController() {
+        // Starts the visual version of the game.
         this.console = new Console();
         this.bll = new BoardLayersListener(this);
         bll.setVisible(true);
@@ -46,6 +47,7 @@ public class VisualGameController implements ActionListener {
         }
     }
 
+    // Sets up players, board, and the first day.
     private void setupGame(int nPlayers) {
         XMLParser parser = new XMLParser();
         this.board = parser.createBoard();
@@ -156,6 +158,7 @@ public class VisualGameController implements ActionListener {
         bll.refresh(board, players, activePlayer, daysRemaining, scenesRemaining);
     }
 
+    // Handles the Move button.
     private boolean movePlayerGui(Player p) {
         if (p == null) {
             return false;
@@ -191,6 +194,7 @@ public class VisualGameController implements ActionListener {
         return true;
     }
 
+    // Handles the Upgrade button.
     private boolean upgradeGui(Player p) {
         if (p == null) {
             return false;
@@ -431,6 +435,7 @@ public class VisualGameController implements ActionListener {
         return status;
     }
 
+    // Handles the Take Role button.
     private int takeRoleGui(Player p) {
         int funcStatus = 0;
         Room room = p.getPosition();
@@ -501,6 +506,7 @@ public class VisualGameController implements ActionListener {
         return func_status;
     }
 
+    // Deals out new scenes and resets everyone to trailers.
     private void resetToNewDay() {
         Room trailers = board.getRoomByName("trailer");
         scenesRemaining = 0;
@@ -762,6 +768,7 @@ public class VisualGameController implements ActionListener {
     }
 
     @Override
+    // Runs when one of the Swing buttons is clicked.
     public void actionPerformed(ActionEvent e) {
         if (daysRemaining <= 0) {
             concludeGame();
@@ -816,6 +823,7 @@ public class VisualGameController implements ActionListener {
         refreshView();
     }
 
+    // Stores one move so the Undo button can go back.
     private class GameSnapshot {
         private int savedDaysRemaining;
         private int savedScenesRemaining;

@@ -2,6 +2,9 @@ package model;
 
 import java.util.List;
 
+/**
+ * Stores the rooms that make up the Deadwood board.
+ */
 public class Board {
     private List<Room> rooms;
 
@@ -17,6 +20,9 @@ public class Board {
         this.rooms = rooms;
     }
 
+    /**
+     * Finds a room by its XML/game name.
+     */
     public Room getRoomByName(String name) {
         for (Room room : rooms) {
             if (room.getName().equals(name)) {

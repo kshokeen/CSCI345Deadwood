@@ -6,6 +6,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+/**
+ * Room that stores rank upgrade costs for dollars and credits.
+ */
 public class CastingOffice extends Room {
     private Map<Integer, Integer> dollarCosts;
     private Map<Integer, Integer> creditCosts;
@@ -16,6 +19,9 @@ public class CastingOffice extends Room {
         this.creditCosts = new HashMap<Integer, Integer>();
     }
 
+    /**
+     * Adds one upgrade cost read from board.xml.
+     */
     public void addUpgradeCost(Integer rank, String currency, Integer amount) {
         if ("dollar".equals(currency)) {
             dollarCosts.put(rank, amount);
@@ -50,6 +56,9 @@ public class CastingOffice extends Room {
         return creditCosts;
     }
 
+    /**
+     * Returns all ranks that can be bought in the casting office.
+     */
     public Set<Integer> getUpgradeRanks() {
         Set<Integer> ranks = new HashSet<Integer>();
         ranks.addAll(dollarCosts.keySet());

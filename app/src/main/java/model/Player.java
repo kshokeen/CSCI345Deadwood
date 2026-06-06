@@ -1,5 +1,8 @@
 package model;
 
+/**
+ * Tracks one player's money, rank, location, and current role.
+ */
 public class Player {
     private Integer dollars;
     private Integer credits;
@@ -23,6 +26,9 @@ public class Player {
         this.activeRole = null;
     }
 
+    /**
+     * Moves to an adjacent room and reveals the set if needed.
+     */
     public void move(Room room) {
         if (this.position != null && this.position.getAdjacentRooms().contains(room)) {
             this.position = room;
@@ -30,6 +36,9 @@ public class Player {
         }
     }
 
+    /**
+     * Assigns a role if the player has enough rank and is not already working.
+     */
     public void takeRole(Role role) {
         if (canTakeRole(role)) {
             activeRole = role;
@@ -119,12 +128,18 @@ public class Player {
         return activeRole != null;
     }
 
+    /**
+     * Scene cards reveal the first time a player enters their set.
+     */
     private void revealCurrentSet() {
         if (position instanceof FilmSet) {
             ((FilmSet) position).reveal();
         }
     }
 
+    /**
+     * Final score is dollars + credits + five times rank.
+     */
     public Integer calculateScore() {
         return dollars + credits + (5 * rank);
     }

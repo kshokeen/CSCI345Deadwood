@@ -1,5 +1,8 @@
 package model;
 
+/**
+ * Represents an on-card or off-card acting role.
+ */
 public class Role {
     private String name;
     private Integer rank;
@@ -104,6 +107,9 @@ public class Role {
         this.area = area;
     }
 
+    /**
+     * Clears the actor and rehearsal chips when a scene ends or resets.
+     */
     public void reset() {
         this.actor = null;
         this.rehearsalChips = 0;

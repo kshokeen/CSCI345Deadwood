@@ -37,6 +37,7 @@ public class BoardLayersListener extends JFrame {
     private final List<JLabel> dynamicLabels;
     private final String[] diceColors = {"r", "b", "g", "y", "c", "p", "o", "v"};
 
+    // Sets up the main board window.
     public BoardLayersListener(VisualGameController visualGameController) {
         super("Deadwood");
         this.visualGameController = visualGameController;
@@ -111,6 +112,7 @@ public class BoardLayersListener extends JFrame {
 
     public void refresh(Board board, List<Player> players, Player activePlayer, int daysRemaining,
             int scenesRemaining) {
+        // Redraw the stuff that changes during the game.
         clearDynamicLabels();
         drawScenes(board);
         drawShots(board);
@@ -120,6 +122,7 @@ public class BoardLayersListener extends JFrame {
     }
 
     private void drawScenes(Board board) {
+        // Show scene cards, hidden cards, or wrapped sets.
         for (Room room : board.getRooms()) {
             if (room instanceof FilmSet) {
                 FilmSet set = (FilmSet) room;
@@ -154,6 +157,7 @@ public class BoardLayersListener extends JFrame {
     }
 
     private void drawShots(Board board) {
+        // Put shot counters on each active set.
         ImageIcon shotIcon = loadIcon("/images/shot.png");
 
         for (Room room : board.getRooms()) {
@@ -173,6 +177,7 @@ public class BoardLayersListener extends JFrame {
     }
 
     private void drawPlayers(List<Player> players) {
+        // Put player dice on their room or role.
         for (int i = 0; i < players.size(); i++) {
             Player player = players.get(i);
             BoardArea area = getPlayerArea(player);
@@ -194,6 +199,7 @@ public class BoardLayersListener extends JFrame {
         Role role = player.getActiveRole();
 
         if (role != null && role.getArea() != null) {
+            // On-card role areas are relative to the scene card, not the whole board.
             if (role.getParentScene() != null && role.getParentScene().getContainingSet() != null
                     && role.getParentScene().getContainingSet().getArea() != null) {
                 BoardArea roleArea = role.getArea();
@@ -215,6 +221,7 @@ public class BoardLayersListener extends JFrame {
     private BoardArea getRoomPlayerArea(Room room) {
         String name = room.getName();
 
+        // Waiting spots keep players who are not on roles from covering scene cards.
         if ("Train Station".equals(name)) {
             return new BoardArea(180, 190, 80, 60);
         } else if ("Jail".equals(name)) {
@@ -245,6 +252,7 @@ public class BoardLayersListener extends JFrame {
     }
 
     private void updateInfo(List<Player> players, Player activePlayer, int daysRemaining, int scenesRemaining) {
+        // Update the right side player info.
         statusLabel.setText("<html><center>Day: " + daysRemaining + "<br>Scenes Left: " + scenesRemaining
                 + "<br><span style='font-size:18px'>PLAYER " + (players.indexOf(activePlayer) + 1)
                 + "'S TURN</span></center></html>");

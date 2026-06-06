@@ -1,5 +1,8 @@
 package model;
 
+/**
+ * Represents a rectangular area on the board image.
+ */
 public class BoardArea {
     private int x;
     private int y;
@@ -29,6 +32,9 @@ public class BoardArea {
         return height;
     }
 
+    /**
+     * Checks whether a board coordinate is inside this area.
+     */
     public boolean contains(int px, int py) {
         return px >= x && px <= x + width && py >= y && py <= y + height;
     }

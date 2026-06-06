@@ -31,6 +31,7 @@ public class XMLParser {
     private static final String BOARD_FILE = "board.xml";
     private static final String CARDS_FILE = "cards.xml";
 
+    // Reads board.xml and makes the board rooms.
     public Board createBoard() {
         Document document = loadDocument(BOARD_FILE);
         Element root = document.getDocumentElement();
@@ -52,6 +53,7 @@ public class XMLParser {
         return new Board(rooms);
     }
 
+    // Reads cards.xml and makes the scene deck.
     public Queue<Scene> createScenesDeck() {
         Document document = loadDocument(CARDS_FILE);
         Element root = document.getDocumentElement();
@@ -68,6 +70,7 @@ public class XMLParser {
         return scenes;
     }
 
+    // Loads one XML file from resources.
     private Document loadDocument(String filename) {
         try {
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
@@ -92,6 +95,7 @@ public class XMLParser {
         }
     }
 
+    // Turns one card tag into a Scene.
     private Scene parseScene(Element cardElement) {
         String title = cardElement.getAttribute("name");
         String imageName = cardElement.getAttribute("img");
@@ -106,6 +110,7 @@ public class XMLParser {
         return scene;
     }
 
+    // Makes the correct room type.
     private Room createRoom(Element roomElement) {
         String nodeName = roomElement.getNodeName();
 
@@ -129,6 +134,7 @@ public class XMLParser {
         throw new IllegalArgumentException("Unknown room type: " + nodeName);
     }
 
+    // Reads off-card roles.
     private List<Role> parseRoles(Element parentElement, FilmSet set) {
         NodeList partNodes = parentElement.getElementsByTagName("part");
         List<Role> roles = new ArrayList<Role>();
@@ -143,6 +149,7 @@ public class XMLParser {
         return roles;
     }
 
+    // Reads on-card roles.
     private List<Role> parseRoles(Element parentElement, Scene scene) {
         NodeList partNodes = parentElement.getElementsByTagName("part");
         List<Role> roles = new ArrayList<Role>();
@@ -216,6 +223,7 @@ public class XMLParser {
         return office;
     }
 
+    // Reads shot counter spots.
     private List<BoardArea> parseTakeAreas(Element setElement) {
         List<BoardArea> areas = new ArrayList<BoardArea>();
         Element takesElement = getFirstDirectChild(setElement, "takes");
@@ -234,6 +242,7 @@ public class XMLParser {
         return areas;
     }
 
+    // Reads x/y/w/h from XML.
     private BoardArea parseArea(Element areaElement) {
         if (areaElement == null) {
             return null;

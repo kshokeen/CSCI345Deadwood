@@ -2,6 +2,9 @@ package model;
 
 import java.util.List;
 
+/**
+ * Base class for all board locations.
+ */
 public abstract class Room {
     protected String name;
     protected List<Room> adjacentRooms;

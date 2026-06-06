@@ -3,6 +3,9 @@ package model;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Stores the data for one scene card from cards.xml.
+ */
 public class Scene {
     private String title;
     private Integer budget;
@@ -94,6 +97,9 @@ public class Scene {
         return !hasAvailableRoles();
     }
 
+    /**
+     * Clears all on-card roles for reuse/reset.
+     */
     public void resetRoles() {
         for (Role role : roles) {
             role.setActor(null);
